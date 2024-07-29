@@ -1,11 +1,10 @@
 package server
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
 
 	"my-go-template/cmd/web"
+	"my-go-template/cmd/web/auth"
 	"my-go-template/cmd/web/embed"
 	"my-go-template/internal/handler"
 
@@ -16,32 +15,32 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := chi.NewRouter()
+	// Logging Middleware
 	r.Use(middleware.Logger)
-	r.Get("/api", s.HelloWorldHandler)
 
-	r.Get("/health", s.healthHandler)
+	// Create a new handler instance
+	h := handler.NewHandler(s.db)
 
+	// Serve static files
 	fileServer := http.FileServer(http.FS(embed.Files))
 	r.Handle("/assets/*", fileServer)
+
+	// API Test Endpoint
+	r.Get("/api", h.HelloWorldHandler)
+	// Health Check
+	r.Get("/health", h.HealthHandler)
+	// Hello
 	r.Get("/", templ.Handler(web.HelloForm()).ServeHTTP)
-	r.Post("/hello", handler.NewHelloWebHandler(s.db)) // Pass the db instance
+	r.Post("/hello", h.HelloWebHandler)
+
+	// Auth Group goes here
+	r.Route("/auth", func(r chi.Router) {
+		r.Get("/signup", templ.Handler(auth.SignupForm()).ServeHTTP)
+
+		r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Login"))
+		})
+	})
 
 	return r
-}
-
-func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
-
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("error handling JSON marshal. Err: %v", err)
-	}
-
-	_, _ = w.Write(jsonResp)
-}
-
-func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
-	jsonResp, _ := json.Marshal(s.db.Health())
-	_, _ = w.Write(jsonResp)
 }

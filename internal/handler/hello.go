@@ -1,22 +1,13 @@
 package handler
 
 import (
+	"encoding/json"
 	"log"
 	"my-go-template/cmd/web"
-	"my-go-template/internal/database"
 	"net/http"
 )
 
-type HelloWebHandler struct {
-	db database.Service
-}
-
-func NewHelloWebHandler(db database.Service) http.HandlerFunc {
-	h := &HelloWebHandler{db: db}
-	return h.ServeHTTP
-}
-
-func (h *HelloWebHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HelloWebHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -30,4 +21,16 @@ func (h *HelloWebHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Fatalf("Error rendering in HelloWebHandler: %e", err)
 	}
+}
+
+func (h *Handler) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
+	resp := make(map[string]string)
+	resp["message"] = "Hello World"
+
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("error handling JSON marshal. Err: %v", err)
+	}
+
+	_, _ = w.Write(jsonResp)
 }

@@ -2,15 +2,15 @@ package tests
 
 import (
 	"io"
-	"my-go-template/internal/server"
+	"my-go-template/internal/handler"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
 func TestHandler(t *testing.T) {
-	s := &server.Server{}
-	server := httptest.NewServer(http.HandlerFunc(s.HelloWorldHandler))
+	h := &handler.Handler{}
+	server := httptest.NewServer(http.HandlerFunc(h.HelloWorldHandler))
 	defer server.Close()
 	resp, err := http.Get(server.URL)
 	if err != nil {
