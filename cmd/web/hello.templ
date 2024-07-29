@@ -1,7 +1,9 @@
 package web
 
+import "my-go-template/cmd/web/layout"
+
 templ HelloForm() {
-	@Base() {
+	@layout.Base() {
 		<form hx-post="/hello" method="POST" hx-target="#hello-container">
 			<input class="border" id="name" name="name" type="text"/>
 			<button type="submit">Submit</button>

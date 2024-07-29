@@ -5,24 +5,26 @@ import (
 	"log"
 	"net/http"
 
+	"my-go-template/cmd/web"
+	"my-go-template/cmd/web/embed"
+	"my-go-template/internal/handler"
+
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"my-go-template/cmd/web"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-
-	r.Get("/", s.HelloWorldHandler)
+	r.Get("/api", s.HelloWorldHandler)
 
 	r.Get("/health", s.healthHandler)
 
-	fileServer := http.FileServer(http.FS(web.Files))
+	fileServer := http.FileServer(http.FS(embed.Files))
 	r.Handle("/assets/*", fileServer)
-	r.Get("/web", templ.Handler(web.HelloForm()).ServeHTTP)
-	r.Post("/hello", web.HelloWebHandler)
+	r.Get("/", templ.Handler(web.HelloForm()).ServeHTTP)
+	r.Post("/hello", handler.NewHelloWebHandler(s.db)) // Pass the db instance
 
 	return r
 }

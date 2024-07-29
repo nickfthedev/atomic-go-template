@@ -1,0 +1,28 @@
+package layout
+
+templ Base() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<title>Go Blueprint Hello</title>
+			<link href="assets/css/output.css" rel="stylesheet"/>
+			<script src="assets/js/htmx.min.js"></script>
+		</head>
+		<body>
+    <div class="flex h-screen flex-col">
+		<header class="flex">
+			@Header()
+		</header>
+		@Sidebar() {
+			<main class="mx-auto flex flex-1">
+				{ children... }
+			</main>
+		}
+			<footer class="flex">
+				@Footer()
+			</footer>
+		</div>
+		</body>
+	</html>
+}
