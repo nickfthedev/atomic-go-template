@@ -810,6 +810,10 @@ html {
 }
 
 @media (hover:hover) {
+  .link-hover:hover {
+    text-decoration-line: underline;
+  }
+
   .label a:hover {
     --tw-text-opacity: 1;
     color: var(--fallback-bc,oklch(var(--bc)/var(--tw-text-opacity)));
@@ -1265,6 +1269,10 @@ html {
   text-decoration-line: underline;
 }
 
+.link-hover {
+  text-decoration-line: none;
+}
+
 .menu {
   display: flex;
   flex-direction: column;
@@ -1700,6 +1708,19 @@ html {
 
 .join > :where(*:not(:first-child)):is(.btn) {
   margin-inline-start: calc(var(--border-btn) * -1);
+}
+
+@supports (color:color-mix(in oklab,black,black)) {
+  @media (hover:hover) {
+    .link-accent:hover {
+      color: color-mix(in oklab,var(--fallback-a,oklch(var(--a)/1)) 80%,black);
+    }
+  }
+}
+
+.link-accent {
+  --tw-text-opacity: 1;
+  color: var(--fallback-a,oklch(var(--a)/var(--tw-text-opacity)));
 }
 
 .link:focus {
@@ -2153,6 +2174,10 @@ html:has(.drawer-toggle:checked) {
 
 .grid-flow-col {
   grid-auto-flow: column;
+}
+
+.flex-row {
+  flex-direction: row;
 }
 
 .flex-col {

@@ -36,10 +36,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Auth Group goes here
 	r.Route("/auth", func(r chi.Router) {
 		r.Get("/signup", templ.Handler(auth.SignupForm()).ServeHTTP)
-
-		r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Login"))
-		})
+		r.Get("/login", templ.Handler(auth.LoginForm()).ServeHTTP)
+		r.Get("/forget-password", templ.Handler(auth.ForgetPasswordForm()).ServeHTTP)
+		r.Post("/login", h.HandleLogin)
+		r.Post("/signup", h.HandleSignup)
+		r.Post("/forget-password", h.HandleForgetPassword)
 	})
 
 	return r
