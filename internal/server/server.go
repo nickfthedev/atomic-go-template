@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/joho/godotenv/autoload"
 
 	"my-go-template/internal/database"
@@ -14,8 +15,10 @@ import (
 
 type Server struct {
 	port int
-
+	// The database instance
 	db database.Service
+	// The validator instance
+	validate *validator.Validate
 }
 
 func NewServer() *http.Server {
@@ -24,9 +27,9 @@ func NewServer() *http.Server {
 	database.MigrateUserSchema(db.GetDB()) // Automigrate
 	// Create server struct
 	NewServer := &Server{
-		port: port,
-
-		db: db,
+		port:     port,
+		db:       db,
+		validate: validator.New(validator.WithRequiredStructEnabled()),
 	}
 
 	// Declare Server config

@@ -9,8 +9,14 @@ templ SignupForm(r *http.Request) {
 	@layout.Base(r) {
 		<div class="flex justify-center w-full">
 			<div class="flex flex-col w-full p-12 gap-4">
+				<div id="errors" hx-swap-oob="true"></div>
 				<h1 class="text-2xl font-bold tracking-tight text-center">Sign Up For An Account</h1>
-				<form hx-post="/auth/signup" class="flex flex-col gap-2 w-full" method="POST" hx-swap="outerHTML">
+				<form
+					hx-post="/auth/signup"
+					class="flex flex-col gap-2 w-full"
+					method="POST"
+					hx-swap="outerHTML"
+				>
 					<label class="input input-bordered flex items-center gap-2">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -75,5 +81,10 @@ templ SignupForm(r *http.Request) {
 				</form>
 			</div>
 		</div>
+		<script>
+			document.body.addEventListener('clearErrors', function() {
+				document.getElementById('errors').innerHTML = '';
+  });
+</script>
 	}
 }

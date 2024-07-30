@@ -19,7 +19,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Use(middleware.Logger)
 
 	// Create a new handler instance
-	h := handler.NewHandler(s.db)
+	h := handler.NewHandler(s.db, s.validate)
 
 	// Serve static files
 	fileServer := http.FileServer(http.FS(embed.Files))
