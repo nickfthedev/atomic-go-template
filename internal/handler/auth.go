@@ -31,6 +31,8 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	input.PasswordConfirm = r.FormValue("confirm_password")
 	fmt.Println(input)
 
+	// TODO: Human readable error messages
+
 	// Validate the input
 	if err := h.validate.Struct(input); err != nil {
 		// Handle validation errors

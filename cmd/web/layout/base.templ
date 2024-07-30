@@ -33,6 +33,12 @@ templ Base(r *http.Request) {
 					@Footer()
 				</footer>
 			</div>
+			<!-- We use this to remove erros from erros divs -->
+			<script>
+			document.body.addEventListener('clearErrors', function() {
+				document.getElementById('errors').innerHTML = '';
+				});
+			</script>
 		</body>
 	</html>
 }
