@@ -19,7 +19,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Use(middleware.Logger)
 
 	// Create a new handler instance
-	h := handler.NewHandler(s.db, s.validate)
+	h := handler.NewHandler(s.db, s.validate, s.formDecoder)
 
 	// Serve static files
 	fileServer := http.FileServer(http.FS(embed.Files))
@@ -42,6 +42,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(auth.SignupForm(r)).ServeHTTP(w, r)
 		})
+		r.Get("/verify-email", h.HandleVerifyEmail)
 		r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(auth.LoginForm(r)).ServeHTTP(w, r)
 		})

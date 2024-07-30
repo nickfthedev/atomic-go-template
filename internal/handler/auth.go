@@ -6,9 +6,13 @@ import (
 	"my-go-template/internal/model"
 	"my-go-template/internal/utils"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/resend/resend-go/v2"
 )
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -18,6 +22,8 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		RedirectTime: &[]int{2}[0],
 	})).ServeHTTP(w, r)
 }
+
+// HandleSignup handles the signup form submission, validates the input and creates a new user
 func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	var input model.SignUpInput
 	if err := r.ParseForm(); err != nil {
@@ -26,11 +32,13 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		}))).ServeHTTP(w, r)
 		return
 	}
-	input.Username = r.FormValue("username")
-	input.Email = r.FormValue("email")
-	input.Password = r.FormValue("password")
-	input.PasswordConfirm = r.FormValue("confirm_password")
-	fmt.Println(input)
+	// Bind the form data to the input struct
+	if err := h.formDecoder.Decode(&input, r.PostForm); err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error binding form data: " + err.Error()},
+		}))).ServeHTTP(w, r)
+		return
+	}
 
 	// Validate the input
 	if err := h.validate.Struct(input); err != nil {
@@ -46,6 +54,61 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hashedPassword, err := utils.HashPassword(input.Password)
+	if err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error hashing password: " + err.Error()},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
+	// Check if password and confirm password match
+	if input.Password != input.PasswordConfirm {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Passwords do not match"},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
+	// Save user to database
+	user := model.User{
+		Username: input.Username,
+		Email:    input.Email,
+		Password: &hashedPassword,
+	}
+	if err := h.db.GetDB().Create(&user).Error; err != nil {
+		// Check if it's a unique constraint violation
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
+			addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"A user with this email or username already exists"},
+			}))).ServeHTTP(w, r)
+		} else {
+			addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Error creating user: " + err.Error()},
+			}))).ServeHTTP(w, r)
+		}
+		return
+	}
+
+	// Send verification email
+	client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
+	params := &resend.SendEmailRequest{
+		From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
+		To:      []string{user.Email},
+		Html:    "Thank you for signing up. Please click the link below to verify your email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + user.ID.String(),
+		Subject: fmt.Sprintf("%s - Verify your email address", os.Getenv("APP_NAME")),
+		// Cc:      []string{"cc@example.com"},
+		// Bcc:     []string{"bcc@example.com"},
+		// ReplyTo: "replyto@example.com",
+	}
+
+	sent, err := client.Emails.Send(params)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println("Verification email sent with ID:", sent.Id)
+
 	// Return a success response
 	addSuccessHeaderHandler(templ.Handler(components.SuccessResponse(components.SuccessResponseData{
 		Message: "Signup successful. A verification email has been sent to your email address. Please verify your email address to continue.",
@@ -54,6 +117,32 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 			Url:   "/auth/login",
 		},
 	}))).ServeHTTP(w, r)
+}
+
+func (h *Handler) HandleVerifyEmail(w http.ResponseWriter, r *http.Request) {
+	// Get Token from URL
+	token := r.URL.Query().Get("token")
+
+	// Verify Token
+	user := model.User{}
+	if err := h.db.GetDB().First(&user, "id = ?", token).Error; err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBannerFullPage(components.ErrorBannerData{
+			Messages: []string{"Invalid verification token"},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
+	// If found set verifiedAt to the current Date
+	if user.VerifiedAt == nil {
+		h.db.GetDB().Model(&user).Update("verified_at", time.Now())
+		h.db.GetDB().Save(&user)
+	}
+
+	templ.Handler(components.SuccessResponseFullPage(components.SuccessResponseData{
+		Message:      "Email verified successfully. You will be redirected to the login page in 2 seconds.",
+		RedirectUrl:  &[]string{"/auth/login"}[0],
+		RedirectTime: &[]int{2}[0],
+	})).ServeHTTP(w, r)
 }
 
 func (h *Handler) HandleForgetPassword(w http.ResponseWriter, r *http.Request) {

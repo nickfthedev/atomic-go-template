@@ -14,6 +14,21 @@ type SuccessResponseData struct {
 	ActionButton *ActionButton
 }
 
+templ SuccessResponseFullPage(data SuccessResponseData) {
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<title>Go Blueprint Hello</title>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+		</head>
+		<body>
+			<div class="justify-center w-full h-screen flex flex-1 items-center">
+				@SuccessResponse(data)
+			</div>
+		</body>
+	</html>
+}
+
 templ SuccessResponse(data SuccessResponseData) {
 	<div>
 		<div role="alert" class="alert alert-success">

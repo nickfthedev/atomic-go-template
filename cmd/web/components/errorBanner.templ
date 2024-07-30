@@ -4,6 +4,21 @@ type ErrorBannerData struct {
 	Messages []string
 }
 
+templ ErrorBannerFullPage(data ErrorBannerData) {
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<title>Go Blueprint Hello</title>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+		</head>
+		<body>
+			<div class="justify-center w-full h-screen flex flex-1 items-center">
+				@ErrorBanner(data)
+			</div>
+		</body>
+	</html>
+}
+
 templ ErrorBanner(data ErrorBannerData) {
 	<div>
 		<div role="alert" class="alert alert-error">
