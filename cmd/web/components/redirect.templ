@@ -1,0 +1,13 @@
+
+package components
+
+import "fmt"
+
+type RedirectResponseData struct {
+	RedirectUrl  string
+	RedirectTime string
+}
+
+templ RedirectResponse(data RedirectResponseData) {
+	<meta http-equiv="refresh" content={ fmt.Sprintf("%s; url=%s", data.RedirectTime, data.RedirectUrl) }/>
+}

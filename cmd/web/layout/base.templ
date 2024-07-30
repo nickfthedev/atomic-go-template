@@ -1,8 +1,18 @@
 package layout
 
-templ Base() {
+import "net/http"
+
+func getTheme(r *http.Request) string {
+	cookie, err := r.Cookie("theme")
+	if err == nil && cookie.Value != "" {
+		return cookie.Value
+	}
+	return ""
+}
+
+templ Base(r *http.Request) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang="en" data-theme={ getTheme(r) }>
 		<head>
 			<meta charset="utf-8"/>
 			<title>Go Blueprint Hello</title>

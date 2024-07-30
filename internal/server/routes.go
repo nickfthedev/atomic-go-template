@@ -30,14 +30,24 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Health Check
 	r.Get("/health", h.HealthHandler)
 	// Hello
-	r.Get("/", templ.Handler(web.HelloForm()).ServeHTTP)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		templ.Handler(web.HelloForm(r)).ServeHTTP(w, r)
+	})
 	r.Post("/hello", h.HelloWebHandler)
 
+	// Theme
+	r.Post("/theme", h.Theme)
 	// Auth Group goes here
 	r.Route("/auth", func(r chi.Router) {
-		r.Get("/signup", templ.Handler(auth.SignupForm()).ServeHTTP)
-		r.Get("/login", templ.Handler(auth.LoginForm()).ServeHTTP)
-		r.Get("/forget-password", templ.Handler(auth.ForgetPasswordForm()).ServeHTTP)
+		r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
+			templ.Handler(auth.SignupForm(r)).ServeHTTP(w, r)
+		})
+		r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
+			templ.Handler(auth.LoginForm(r)).ServeHTTP(w, r)
+		})
+		r.Get("/forget-password", func(w http.ResponseWriter, r *http.Request) {
+			templ.Handler(auth.ForgetPasswordForm(r)).ServeHTTP(w, r)
+		})
 		r.Post("/login", h.HandleLogin)
 		r.Post("/signup", h.HandleSignup)
 		r.Post("/forget-password", h.HandleForgetPassword)
