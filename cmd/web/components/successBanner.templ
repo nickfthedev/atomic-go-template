@@ -1,0 +1,46 @@
+package components
+
+import "fmt"
+
+type ActionButton struct {
+	Label string
+	Url   string
+}
+
+type SuccessResponseData struct {
+	Message      string
+	RedirectUrl  *string
+	RedirectTime *int
+	ActionButton *ActionButton
+}
+
+templ SuccessResponse(data SuccessResponseData) {
+	<div>
+		<div role="alert" class="alert alert-success">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="h-6 w-6 shrink-0 stroke-current"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+				></path>
+			</svg>
+			<div class="flex flex-col gap-2">
+				<span>{ data.Message }</span>
+				if data.ActionButton != nil {
+					<div class="flex flex-row justify-end">
+						<a href={ templ.SafeURL(data.ActionButton.Url) } class="btn btn-sm">{ data.ActionButton.Label }</a>
+					</div>
+				}
+			</div>
+		</div>
+		if data.RedirectUrl != nil && data.RedirectTime != nil {
+			<meta http-equiv="refresh" content={ fmt.Sprintf("%d; url=%s", *data.RedirectTime, *data.RedirectUrl) }/>
+		}
+	</div>
+}

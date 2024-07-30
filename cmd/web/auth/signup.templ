@@ -7,7 +7,7 @@ templ SignupForm() {
 		<div class="flex justify-center w-full">
 			<div class="flex flex-col w-full p-12 gap-4">
 				<h1 class="text-2xl font-bold tracking-tight text-center">Sign Up For An Account</h1>
-				<form hx-post="/auth/signup" class="flex flex-col gap-2 w-full" method="POST" hx-target="#signup-container">
+				<form hx-post="/auth/signup" class="flex flex-col gap-2 w-full" method="POST" hx-swap="outerHTML">
 					<label class="input input-bordered flex items-center gap-2">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -67,6 +67,7 @@ templ SignupForm() {
 						</svg>
 						<input type="password" class="grow" placeholder="Confirm Password" name="confirm_password"/>
 					</label>
+					<a href="/auth/login" class="link link-hover link-accent">Already have an account? Login</a>
 					<button type="submit" class="btn btn-active btn-accent btn-block">Sign Up</button>
 				</form>
 			</div>
