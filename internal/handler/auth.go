@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"my-go-template/cmd/web/components"
 	"my-go-template/internal/model"
+	"my-go-template/internal/utils"
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/go-playground/validator/v10"
 )
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -16,12 +18,11 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		RedirectTime: &[]int{2}[0],
 	})).ServeHTTP(w, r)
 }
-
 func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	var input model.SignUpInput
 	if err := r.ParseForm(); err != nil {
 		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Message: "Error parsing form data: " + err.Error(),
+			Messages: []string{"Error parsing form data: " + err.Error()},
 		}))).ServeHTTP(w, r)
 		return
 	}
@@ -31,13 +32,16 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	input.PasswordConfirm = r.FormValue("confirm_password")
 	fmt.Println(input)
 
-	// TODO: Human readable error messages
-
 	// Validate the input
 	if err := h.validate.Struct(input); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		var messages []string
+		for _, validationError := range validationErrors {
+			messages = append(messages, utils.MsgForTag(validationError))
+		}
 		// Handle validation errors
 		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Message: "Invalid input: " + err.Error(),
+			Messages: messages,
 		}))).ServeHTTP(w, r)
 		return
 	}
