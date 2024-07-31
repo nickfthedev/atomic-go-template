@@ -22,7 +22,7 @@ type SignUpInput struct {
 
 type LoginInput struct {
 	Email    string `validate:"required,email" form:"email"`
-	Password string `validate:"required,min=8" form:"password"`
+	Password string `validate:"required" form:"password"`
 }
 
 type ForgotPasswordInput struct {

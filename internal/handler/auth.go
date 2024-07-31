@@ -51,15 +51,27 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Compare Password Hash
+	if err := utils.CheckPasswordHash(*user.Password, input.Password); err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Invalid email or password"},
+		}))).ServeHTTP(w, r)
+		return
+	}
 
 	// Set Cookie
+	if err := utils.CreateJWTCookie(w, user.ID.String()); err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error creating JWT cookie: " + err.Error()},
+		}))).ServeHTTP(w, r)
+		return
+	}
 
-	templ.Handler(components.SuccessResponse(components.SuccessResponseData{
+	// Show Success Message and send redirect to client
+	addSuccessHeaderHandler(templ.Handler(components.SuccessResponse(components.SuccessResponseData{
 		Message:      "Login successful",
 		RedirectUrl:  &[]string{"/"}[0],
 		RedirectTime: &[]int{2}[0],
-	})).ServeHTTP(w, r)
+	}))).ServeHTTP(w, r)
 }
 
 // HandleSignup handles the signup form submission, validates the input and creates a new user
