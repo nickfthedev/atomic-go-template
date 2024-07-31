@@ -1,6 +1,10 @@
 package layout
 
-import "net/http"
+import (
+	"my-go-template/internal/middleware"
+	"my-go-template/internal/model"
+	"net/http"
+)
 
 func getTheme(r *http.Request) string {
 	cookie, err := r.Cookie("theme")
@@ -8,6 +12,14 @@ func getTheme(r *http.Request) string {
 		return cookie.Value
 	}
 	return ""
+}
+
+func GetUserFromContext(r *http.Request) model.User {
+	user, ok := r.Context().Value(middleware.UserKey).(model.User)
+	if !ok {
+		return model.User{}
+	}
+	return user
 }
 
 templ Base(r *http.Request) {
@@ -22,7 +34,7 @@ templ Base(r *http.Request) {
 		<body>
 			<div class="flex h-screen flex-col">
 				<header class="flex">
-					@Header()
+					@Header(GetUserFromContext(r))
 				</header>
 				@Sidebar() {
 					<main class="justify-center w-full flex flex-1">

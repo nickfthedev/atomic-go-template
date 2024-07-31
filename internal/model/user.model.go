@@ -5,12 +5,14 @@ import "time"
 // User represents a user in the database.
 type User struct {
 	BaseModel
-	Username      string     `gorm:"unique;not null"`
-	Email         string     `gorm:"unique;not null"`
-	Password      *string    `gorm:""` // Password is optional
-	VerifiedAt    *time.Time `gorm:""` // Verified at is optional
-	OAuthProvider *string    `gorm:""` // OAuth provider name (e.g., "google", "github")
-	OAuthID       *string    `gorm:""` // OAuth provider user ID
+	Username                 string     `gorm:"unique;not null"`
+	Email                    string     `gorm:"unique;not null"`
+	Password                 *string    `gorm:""` // Password is optional
+	PasswordResetToken       *string    `gorm:""` // Password reset token is optional
+	PasswordResetRequestedAt *time.Time `gorm:""` // Password reset requested at is optional
+	VerifiedAt               *time.Time `gorm:""` // Verified at is optional
+	OAuthProvider            *string    `gorm:""` // OAuth provider name (e.g., "google", "github")
+	OAuthID                  *string    `gorm:""` // OAuth provider user ID
 }
 
 type SignUpInput struct {

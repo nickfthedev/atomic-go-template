@@ -1,6 +1,11 @@
 package layout
 
-templ Header() {
+import (
+	"github.com/google/uuid"
+	"my-go-template/internal/model"
+)
+
+templ Header(user model.User) {
 	<div class="navbar bg-base-100">
 		<div class="flex-1">
 			<label class="btn btn-ghost drawer-button lg:hidden" for="my-drawer-2">
@@ -18,7 +23,7 @@ templ Header() {
 					></path>
 				</svg>
 			</label>
-			<a class="btn btn-ghost text-xl">daisyUI</a>
+			<a class="btn btn-ghost text-xl">Goth Template</a>
 		</div>
 		<div class="flex-none gap-2">
 			<div class="dropdown dropdown-end">
@@ -32,22 +37,28 @@ templ Header() {
 				</div>
 				<ul
 					tabindex="0"
-					class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+					class="menu menu-sm dropdown-content bg-base-300 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 				>
-					<li>
-						<a href="/auth/login">Login</a>
-					</li>
-					<li>
-						<a href="/auth/signup">Sign Up</a>
-					</li>
-					<li>
-						<a class="justify-between">
-							Profile
-							<span class="badge">New</span>
-						</a>
-					</li>
-					<li><a>Settings</a></li>
-					<li><a>Logout</a></li>
+					if user.ID == uuid.Nil {
+						<li>
+							<a href="/auth/login">Login</a>
+						</li>
+						<li>
+							<a href="/auth/signup">Sign Up</a>
+						</li>
+					} else {
+						<li>
+							<span>Welcome, { user.Username }</span>
+						</li>
+						<li></li>
+						<li>
+							<a class="justify-between">
+								Profile
+								<span class="badge">New</span>
+							</a>
+						</li>
+						<li><a href="/auth/logout">Logout</a></li>
+					}
 				</ul>
 			</div>
 		</div>

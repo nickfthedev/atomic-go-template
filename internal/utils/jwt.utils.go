@@ -59,3 +59,15 @@ func VerifyJWTCookie(r *http.Request) (string, error) {
 
 	return "", jwt.ErrSignatureInvalid
 }
+
+func DeleteJWTCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+	})
+}
