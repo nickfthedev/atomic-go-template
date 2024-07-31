@@ -15,27 +15,15 @@ import (
 	"github.com/resend/resend-go/v2"
 )
 
+// HandleLogin handles the login form submission, validates the input and redirects to the home page after successful login
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	templ.Handler(components.SuccessResponse(components.SuccessResponseData{
-		Message:      "Login successful",
-		RedirectUrl:  &[]string{"/"}[0],
-		RedirectTime: &[]int{2}[0],
-	})).ServeHTTP(w, r)
-}
+	// Declare the input struct
+	var input model.LoginInput
 
-// HandleSignup handles the signup form submission, validates the input and creates a new user
-func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
-	var input model.SignUpInput
-	if err := r.ParseForm(); err != nil {
+	// Parse and bind the form data to the input struc
+	if err := utils.ParseAndBindForm(r, &input, h.formDecoder); err != nil {
 		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Error parsing form data: " + err.Error()},
-		}))).ServeHTTP(w, r)
-		return
-	}
-	// Bind the form data to the input struct
-	if err := h.formDecoder.Decode(&input, r.PostForm); err != nil {
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Error binding form data: " + err.Error()},
+			Messages: []string{"Error processing form data: " + err.Error()},
 		}))).ServeHTTP(w, r)
 		return
 	}
@@ -54,10 +42,49 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := utils.HashPassword(input.Password)
-	if err != nil {
+	// Find user in database
+	user := model.User{}
+	if err := h.db.GetDB().First(&user, "email = ?", input.Email).Error; err != nil {
 		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Error hashing password: " + err.Error()},
+			Messages: []string{"Invalid email or password"},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
+	// Compare Password Hash
+
+	// Set Cookie
+
+	templ.Handler(components.SuccessResponse(components.SuccessResponseData{
+		Message:      "Login successful",
+		RedirectUrl:  &[]string{"/"}[0],
+		RedirectTime: &[]int{2}[0],
+	})).ServeHTTP(w, r)
+}
+
+// HandleSignup handles the signup form submission, validates the input and creates a new user
+func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
+	// Declare the input struct
+	var input model.SignUpInput
+
+	// Parse and bind the form data to the input struct
+	if err := utils.ParseAndBindForm(r, &input, h.formDecoder); err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error processing form data: " + err.Error()},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
+	// Validate the input
+	if err := h.validate.Struct(input); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		var messages []string
+		for _, validationError := range validationErrors {
+			messages = append(messages, utils.MsgForTag(validationError))
+		}
+		// Handle validation errors
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: messages,
 		}))).ServeHTTP(w, r)
 		return
 	}
@@ -66,6 +93,14 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	if input.Password != input.PasswordConfirm {
 		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
 			Messages: []string{"Passwords do not match"},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(input.Password)
+	if err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error hashing password: " + err.Error()},
 		}))).ServeHTTP(w, r)
 		return
 	}

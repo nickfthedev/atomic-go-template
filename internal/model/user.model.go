@@ -19,3 +19,17 @@ type SignUpInput struct {
 	Password        string `validate:"required,min=8" form:"password"`
 	PasswordConfirm string `validate:"required,min=8" form:"confirm_password"`
 }
+
+type LoginInput struct {
+	Email    string `validate:"required,email" form:"email"`
+	Password string `validate:"required,min=8" form:"password"`
+}
+
+type ForgotPasswordInput struct {
+	Email string `validate:"required,email" form:"email"`
+}
+
+type ResetPasswordInput struct {
+	Password        string `validate:"required,min=8" form:"password"`
+	PasswordConfirm string `validate:"required,min=8" form:"confirm_password"`
+}
