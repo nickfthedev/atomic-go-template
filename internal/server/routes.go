@@ -63,6 +63,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Get("/reset-password", h.HandleResetPassword)
 		r.Post("/reset-password", h.HandleResetPasswordSubmit)
 	})
-
+	r.Get("/profile/edit", func(w http.ResponseWriter, r *http.Request) {
+		templ.Handler(auth.EditProfilePage(r)).ServeHTTP(w, r)
+	})
+	r.Post("/profile/edit", h.HandleEditProfile)
 	return r
 }

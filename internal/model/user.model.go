@@ -23,6 +23,14 @@ type SignUpInput struct {
 	PasswordConfirm string `validate:"required,min=8" form:"confirm_password"`
 }
 
+type EditProfileInput struct {
+	Username        string  `validate:"required,min=3,max=20" form:"username"`
+	Email           string  `validate:"required,email" form:"email"`
+	Password        *string `validate:"omitempty,min=8" form:"password"`
+	PasswordConfirm *string `validate:"-" form:"confirm_password"`
+	AvatarURL       *string `validate:"omitempty" form:"avatar_url"`
+}
+
 type LoginInput struct {
 	Email    string `validate:"required,email" form:"email"`
 	Password string `validate:"required" form:"password"`

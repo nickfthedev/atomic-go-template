@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"my-go-template/cmd/web/auth"
 	"my-go-template/cmd/web/components"
+	mw "my-go-template/internal/middleware"
 	"my-go-template/internal/model"
 	"my-go-template/internal/utils"
 	"net/http"
@@ -85,6 +86,102 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	})).ServeHTTP(w, r)
 }
 
+func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
+	// Declare the input struct
+	var input model.EditProfileInput
+	// Parse and bind the form data to the input struct
+	if err := utils.ParseAndBindForm(r, &input, h.formDecoder); err != nil {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error processing form data: " + err.Error()},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
+	// Handle empty password fields
+	if input.Password != nil && *input.Password == "" {
+		input.Password = nil
+	}
+	// Validate the input
+	if err := h.validate.Struct(input); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		var messages []string
+		for _, validationError := range validationErrors {
+			messages = append(messages, utils.MsgForTag(validationError))
+		}
+		// Handle validation errors
+		templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: messages,
+		})).ServeHTTP(w, r)
+		return
+	}
+
+	// Get user from database
+	user := r.Context().Value(mw.UserKey).(model.User)
+	user.Password = nil
+	// Update user
+	user.Username = input.Username
+	// Check if email has changed and resend verification email
+	if user.Email != input.Email {
+		user.VerifiedAt = nil
+		// TODO: Use different Key for verification. If someone knows that the id is the verification key, they can use it to verify any email.
+		// TODO: Use a second table entry for new mail address and swap after verification.
+		// Send verification email
+		client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
+		params := &resend.SendEmailRequest{
+			From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
+			To:      []string{user.Email},
+			Html:    "Please click the link below to verify your new email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + user.ID.String(),
+			Subject: fmt.Sprintf("%s - Verify your new email address", os.Getenv("APP_NAME")),
+			// Cc:      []string{"cc@example.com"},
+			// Bcc:     []string{"bcc@example.com"},
+			// ReplyTo: "replyto@example.com",
+		}
+		sent, err := client.Emails.Send(params)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		fmt.Println("Verification email sent with ID:", sent.Id)
+	}
+	user.Email = input.Email
+
+	// Check if input password is not nil
+	if input.Password != nil && input.PasswordConfirm != nil {
+		// Check if password and confirm password match
+		if *input.Password != *input.PasswordConfirm {
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Passwords do not match"},
+			})).ServeHTTP(w, r)
+			return
+		}
+		hashedPassword, err := utils.HashPassword(*input.Password)
+		if err != nil {
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Error hashing password: " + err.Error()},
+			})).ServeHTTP(w, r)
+			return
+		}
+		user.Password = &hashedPassword
+	}
+	// Prepare the fields to update
+	updateFields := map[string]interface{}{
+		"username":   input.Username,
+		"email":      input.Email,
+		"avatar_url": user.AvatarURL,
+	}
+
+	// Conditionally add the password field if it has been set
+	if user.Password != nil {
+		updateFields["password"] = *user.Password
+	}
+	// Save user to database
+	h.db.GetDB().Model(&user).Updates(updateFields)
+	// Return a success response
+	templ.Handler(components.SuccessResponse(components.SuccessResponseData{
+		Message: "Profile updated successfully. ",
+	})).ServeHTTP(w, r)
+}
+
 // HandleSignup handles the signup form submission, validates the input and creates a new user
 func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	// Declare the input struct
@@ -159,7 +256,6 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		// Bcc:     []string{"bcc@example.com"},
 		// ReplyTo: "replyto@example.com",
 	}
-
 	sent, err := client.Emails.Send(params)
 	if err != nil {
 		fmt.Println(err.Error())
