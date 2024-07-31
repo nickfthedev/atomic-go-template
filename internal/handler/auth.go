@@ -319,11 +319,9 @@ func (h *Handler) HandleResetPasswordSubmit(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Get the token from the URL
-	token := r.URL.Query().Get("token") // TODO: Token not sent with HTMX
 	// Find the user with the token
 	user := model.User{}
-	err := h.db.GetDB().First(&user, "password_reset_token = ?", token).Error
+	err := h.db.GetDB().First(&user, "password_reset_token = ?", input.Token).Error
 	if err != nil {
 		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
 			Messages: []string{"Invalid password reset token. Maybe expired?"},

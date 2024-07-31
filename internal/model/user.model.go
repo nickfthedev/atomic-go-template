@@ -34,4 +34,5 @@ type ForgotPasswordInput struct {
 type ResetPasswordInput struct {
 	Password        string `validate:"required,min=8" form:"password"`
 	PasswordConfirm string `validate:"required,min=8" form:"confirm_password"`
+	Token           string `validate:"required" form:"token"`
 }
