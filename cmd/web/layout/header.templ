@@ -3,6 +3,7 @@ package layout
 import (
 	"github.com/google/uuid"
 	"my-go-template/internal/model"
+	"strings"
 )
 
 templ Header(user model.User) {
@@ -29,10 +30,24 @@ templ Header(user model.User) {
 			<div class="dropdown dropdown-end">
 				<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
 					<div class="w-10 rounded-full">
-						<img
-							alt="Tailwind CSS Navbar component"
-							src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-						/>
+						if user.AvatarURL != nil {
+							<img
+								alt="User Avatar"
+								src={ *user.AvatarURL }
+							/>
+						} else {
+							<div class="avatar placeholder">
+								<div class="bg-neutral text-neutral-content w-10 rounded-full">
+									if len(user.Username) > 0 {
+										<span class="text-xl">{ strings.ToUpper(string(user.Username[0])) }</span>
+									} else {
+										<span class="text-xl">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+										</span>
+									}
+								</div>
+							</div>
+						}
 					</div>
 				</div>
 				<ul

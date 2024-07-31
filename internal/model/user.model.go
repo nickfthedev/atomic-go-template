@@ -11,6 +11,7 @@ type User struct {
 	PasswordResetToken       *string    `gorm:""` // Password reset token is optional
 	PasswordResetRequestedAt *time.Time `gorm:""` // Password reset requested at is optional
 	VerifiedAt               *time.Time `gorm:""` // Verified at is optional
+	AvatarURL                *string    `gorm:""` // Avatar URL is optional
 	OAuthProvider            *string    `gorm:""` // OAuth provider name (e.g., "google", "github")
 	OAuthID                  *string    `gorm:""` // OAuth provider user ID
 }
