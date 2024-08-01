@@ -32,13 +32,14 @@ type Server struct {
 func NewServer() *http.Server {
 
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	// Load Config
+	// Create Config
+	// Can be used in middleware and handler as well
 	config := config.New(&config.Config{
 		Port:               port,
-		EnableAuth:         true, // TODO Implement disable auth
-		EnableRegistration: true, // TODO Implement disable login
-		EnableLogin:        true, // TODO Implement disable login
-		EnableAvatar:       true, // TODO Implement disable avatar
+		EnableAuth:         true,  // TODO Implement disable auth
+		EnableRegistration: true,  // TODO Implement disable login
+		EnableLogin:        true,  // TODO Implement disable login
+		EnableAvatar:       false, // TODO Implement disable avatar
 	})
 	db := database.New()                   // Create database service
 	database.MigrateUserSchema(db.GetDB()) // Automigrate

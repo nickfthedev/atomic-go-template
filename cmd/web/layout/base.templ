@@ -1,6 +1,7 @@
 package layout
 
 import (
+	"my-go-template/internal/middleware"
 	"my-go-template/internal/user"
 	"net/http"
 )
@@ -25,7 +26,7 @@ templ Base(r *http.Request) {
 		<body>
 			<div class="flex h-screen flex-col">
 				<header class="flex">
-					@Header(user.GetUserFromContext(r))
+					@Header(user.GetUserFromContext(r), middleware.GetConfigFromContext(r))
 				</header>
 				@Sidebar() {
 					<main class="justify-center w-full flex flex-1">

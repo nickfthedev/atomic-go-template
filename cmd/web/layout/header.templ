@@ -2,11 +2,12 @@ package layout
 
 import (
 	"github.com/google/uuid"
+	"my-go-template/internal/config"
 	"my-go-template/internal/model"
 	"strings"
 )
 
-templ Header(user model.User) {
+templ Header(user model.User, config *config.Config) {
 	<div class="navbar bg-base-100">
 		<div class="flex-1">
 			<label class="btn btn-ghost drawer-button lg:hidden" for="my-drawer-2">
@@ -30,7 +31,7 @@ templ Header(user model.User) {
 			<div class="dropdown dropdown-end">
 				<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
 					<div class="w-10 rounded-full">
-						if user.AvatarURL != nil {
+						if user.AvatarURL != nil && config.EnableAvatar {
 							if strings.HasPrefix(*user.AvatarURL, "https://") {
 								<img
 									alt="User Avatar"

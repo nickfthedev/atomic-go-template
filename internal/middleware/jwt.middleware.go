@@ -7,8 +7,6 @@ import (
 	"net/http"
 )
 
-type ContextKey string
-
 const UserIDKey ContextKey = "userid"
 const UserKey ContextKey = "user"
 

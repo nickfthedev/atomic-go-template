@@ -8,6 +8,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+type ContextKey string
+
 type Middleware struct {
 	db          database.Service
 	validate    *validator.Validate

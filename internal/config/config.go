@@ -34,7 +34,3 @@ func New(overrides *Config) *Config {
 
 	return instance
 }
-
-func Get() *Config {
-	return instance
-}
