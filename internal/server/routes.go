@@ -41,38 +41,54 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// API Test Endpoint
 	r.Get("/api", h.HelloWorldHandler)
+
 	// Health Check
 	r.Get("/health", h.HealthHandler)
-	// Hello
+
+	// Home
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		templ.Handler(web.HelloForm(r)).ServeHTTP(w, r)
 	})
-	r.Post("/hello", h.HelloWebHandler)
+	r.Post("/hello", h.HelloWebHandler) // Test on Homepage
+	// Sample Protected Page
+	r.Get("/protected", m.IsLoggedIn(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Protected. Access granted"))
+	}))
 
 	// Theme
-	r.Post("/theme", h.Theme)
+	if s.config.Theme.EnableThemeSwitcher {
+		r.Post("/theme", h.Theme)
+	}
 	// Auth Group goes here
-	r.Route("/auth", func(r chi.Router) {
-		r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
-			templ.Handler(auth.SignupForm(r)).ServeHTTP(w, r)
+	if s.config.Auth.EnableAuth {
+		r.Route("/auth", func(r chi.Router) {
+			if s.config.Auth.EnableRegistration {
+				r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
+					templ.Handler(auth.SignupForm(r)).ServeHTTP(w, r)
+				})
+				r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
+					templ.Handler(auth.LoginForm(r)).ServeHTTP(w, r)
+				})
+				r.Post("/login", h.HandleLogin)
+				r.Get("/logout", h.HandleLogout)
+			}
+			if s.config.Auth.EnableResetPassword {
+				r.Get("/forget-password", func(w http.ResponseWriter, r *http.Request) {
+					templ.Handler(auth.ForgetPasswordForm(r)).ServeHTTP(w, r)
+				})
+				r.Post("/forget-password", h.HandleForgetPassword)
+				r.Get("/reset-password", h.HandleResetPassword)
+				r.Post("/reset-password", h.HandleResetPasswordSubmit)
+			}
+			if s.config.Auth.EnableVerifyEmail {
+				r.Get("/verify-email", h.HandleVerifyEmail)
+			}
 		})
-		r.Get("/verify-email", h.HandleVerifyEmail)
-		r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-			templ.Handler(auth.LoginForm(r)).ServeHTTP(w, r)
-		})
-		r.Get("/logout", h.HandleLogout)
-		r.Get("/forget-password", func(w http.ResponseWriter, r *http.Request) {
-			templ.Handler(auth.ForgetPasswordForm(r)).ServeHTTP(w, r)
-		})
-		r.Post("/login", h.HandleLogin)
-		r.Post("/signup", h.HandleSignup)
-		r.Post("/forget-password", h.HandleForgetPassword)
-		r.Get("/reset-password", h.HandleResetPassword)
-		r.Post("/reset-password", h.HandleResetPasswordSubmit)
-	})
-	r.Get("/profile/edit", func(w http.ResponseWriter, r *http.Request) {
-		templ.Handler(auth.EditProfilePage(r)).ServeHTTP(w, r)
-	})
-	r.Post("/profile/edit", h.HandleEditProfile)
+
+		r.Get("/profile/edit", m.IsLoggedIn(func(w http.ResponseWriter, r *http.Request) {
+			templ.Handler(auth.EditProfilePage(r)).ServeHTTP(w, r)
+		}))
+		r.Post("/profile/edit", m.IsLoggedIn(h.HandleEditProfile))
+	}
 	return r
 }

@@ -99,7 +99,7 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 
 	var avatarPath string
 	// Check if avatar is set
-	if r.MultipartForm.File["avatar"] != nil && h.config.EnableAvatar {
+	if r.MultipartForm.File["avatar"] != nil && h.config.Auth.EnableAvatar {
 		avatarFile := r.MultipartForm.File["avatar"][0]
 
 		// Open File
@@ -211,29 +211,33 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 		updateFields["avatar_url"] = avatarPath
 	}
 
-	// Check if email has changed and resend verification email
+	// Check if email has changed and resend verification email, if enabled
 	if user.Email != input.Email {
-		verifyMailToken := uuid.New().String()
-		updateFields["verify_mail_token"] = &verifyMailToken
-		updateFields["verify_mail_address"] = &input.Email
-		updateFields["verified_at"] = nil
-		// Send verification email
-		client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
-		params := &resend.SendEmailRequest{
-			From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
-			To:      []string{user.Email},
-			Html:    "Please click the link below to verify your new email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
-			Subject: fmt.Sprintf("%s - Verify your new email address", os.Getenv("APP_NAME")),
-			// Cc:      []string{"cc@example.com"},
-			// Bcc:     []string{"bcc@example.com"},
-			// ReplyTo: "replyto@example.com",
+		if h.config.Auth.EnableVerifyEmail {
+			verifyMailToken := uuid.New().String()
+			updateFields["verify_mail_token"] = &verifyMailToken
+			updateFields["verify_mail_address"] = &input.Email
+			updateFields["verified_at"] = nil
+			// Send verification email
+			client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
+			params := &resend.SendEmailRequest{
+				From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
+				To:      []string{user.Email},
+				Html:    "Please click the link below to verify your new email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
+				Subject: fmt.Sprintf("%s - Verify your new email address", os.Getenv("APP_NAME")),
+				// Cc:      []string{"cc@example.com"},
+				// Bcc:     []string{"bcc@example.com"},
+				// ReplyTo: "replyto@example.com",
+			}
+			sent, err := client.Emails.Send(params)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+			fmt.Println("Verification email sent with ID:", sent.Id)
+		} else {
+			updateFields["email"] = input.Email
 		}
-		sent, err := client.Emails.Send(params)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		fmt.Println("Verification email sent with ID:", sent.Id)
 	}
 
 	// Check if input password is not nil
@@ -332,33 +336,39 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	// Send verification email
-	client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
-	params := &resend.SendEmailRequest{
-		From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
-		To:      []string{user.Email},
-		Html:    "Thank you for signing up. Please click the link below to verify your email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
-		Subject: fmt.Sprintf("%s - Verify your email address", os.Getenv("APP_NAME")),
-		// Cc:      []string{"cc@example.com"},
-		// Bcc:     []string{"bcc@example.com"},
-		// ReplyTo: "replyto@example.com",
+	if h.config.Auth.EnableVerifyEmail {
+		// Send verification email
+		client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
+		params := &resend.SendEmailRequest{
+			From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
+			To:      []string{user.Email},
+			Html:    "Thank you for signing up. Please click the link below to verify your email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
+			Subject: fmt.Sprintf("%s - Verify your email address", os.Getenv("APP_NAME")),
+			// Cc:      []string{"cc@example.com"},
+			// Bcc:     []string{"bcc@example.com"},
+			// ReplyTo: "replyto@example.com",
+		}
+		sent, err := client.Emails.Send(params)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		fmt.Println("Verification email sent with ID:", sent.Id)
 	}
-	sent, err := client.Emails.Send(params)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fmt.Println("Verification email sent with ID:", sent.Id)
-
 	// Return a success response
-	addSuccessHeaderHandler(templ.Handler(components.SuccessResponse(components.SuccessResponseData{
-		Message: "Signup successful. A verification email has been sent to your email address. Please verify your email address to continue.",
-		ActionButton: &components.ActionButton{
-			Label: "Login",
-			Url:   "/auth/login",
-		},
-	}))).ServeHTTP(w, r)
+	if h.config.Auth.EnableVerifyEmail {
+		addSuccessHeaderHandler(templ.Handler(components.SuccessResponse(components.SuccessResponseData{
+			Message: "Signup successful. A verification email has been sent to your email address. Please verify your email address to continue.",
+			ActionButton: &components.ActionButton{
+				Label: "Login",
+				Url:   "/auth/login",
+			},
+		}))).ServeHTTP(w, r)
+	} else {
+		addSuccessHeaderHandler(templ.Handler(components.SuccessResponse(components.SuccessResponseData{
+			Message: "Signup successful. You can now login.",
+		}))).ServeHTTP(w, r)
+	}
 }
 
 func (h *Handler) HandleVerifyEmail(w http.ResponseWriter, r *http.Request) {

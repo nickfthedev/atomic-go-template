@@ -10,80 +10,84 @@ import (
 templ Header(user model.User, config *config.Config) {
 	<div class="navbar bg-base-100">
 		<div class="flex-1">
-			<label class="btn btn-ghost drawer-button lg:hidden" for="my-drawer-2">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					class="inline-block h-5 w-5 stroke-current"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 6h16M4 12h16M4 18h16"
-					></path>
-				</svg>
-			</label>
+			if config.Theme.EnableSidebar {
+				<label class="btn btn-ghost drawer-button lg:hidden" for="my-drawer-2">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						class="inline-block h-5 w-5 stroke-current"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 6h16M4 12h16M4 18h16"
+						></path>
+					</svg>
+				</label>
+			}
 			<a class="btn btn-ghost text-xl">Goth Template</a>
 		</div>
 		<div class="flex-none gap-2">
-			<div class="dropdown dropdown-end">
-				<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-					<div class="w-10 rounded-full">
-						if user.AvatarURL != nil && config.EnableAvatar {
-							if strings.HasPrefix(*user.AvatarURL, "https://") {
-								<img
-									alt="User Avatar"
-									src={ *user.AvatarURL }
-								/>
+			if config.Auth.EnableAuth {
+				<div class="dropdown dropdown-end">
+					<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+						<div class="w-10 rounded-full">
+							if user.AvatarURL != nil && config.Auth.EnableAvatar {
+								if strings.HasPrefix(*user.AvatarURL, "https://") {
+									<img
+										alt="User Avatar"
+										src={ *user.AvatarURL }
+									/>
+								} else {
+									<img
+										alt="User Avatar"
+										src={ "/public/avatars/" + *user.AvatarURL }
+									/>
+								}
 							} else {
-								<img
-									alt="User Avatar"
-									src={ "/public/avatars/" + *user.AvatarURL }
-								/>
-							}
-						} else {
-							<div class="avatar placeholder">
-								<div class="bg-neutral text-neutral-content w-10 rounded-full">
-									if len(user.Username) > 0 {
-										<span class="text-xl">{ strings.ToUpper(string(user.Username[0])) }</span>
-									} else {
-										<span class="text-xl">
-											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-										</span>
-									}
+								<div class="avatar placeholder">
+									<div class="bg-neutral text-neutral-content w-10 rounded-full">
+										if len(user.Username) > 0 {
+											<span class="text-xl">{ strings.ToUpper(string(user.Username[0])) }</span>
+										} else {
+											<span class="text-xl">
+												<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+											</span>
+										}
+									</div>
 								</div>
-							</div>
-						}
+							}
+						</div>
 					</div>
+					<ul
+						tabindex="0"
+						class="menu menu-sm dropdown-content bg-base-300 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+					>
+						if user.ID == uuid.Nil {
+							<li>
+								<a href="/auth/login">Login</a>
+							</li>
+							<li>
+								<a href="/auth/signup">Sign Up</a>
+							</li>
+						} else {
+							<li>
+								<span>Welcome, { user.Username }</span>
+							</li>
+							<li></li>
+							<li>
+								<a href="/profile/edit" class="justify-between">
+									Edit Profile
+									<span class="badge">New</span>
+								</a>
+							</li>
+							<li><a href="/auth/logout">Logout</a></li>
+						}
+					</ul>
 				</div>
-				<ul
-					tabindex="0"
-					class="menu menu-sm dropdown-content bg-base-300 rounded-box z-[1] mt-3 w-52 p-2 shadow"
-				>
-					if user.ID == uuid.Nil {
-						<li>
-							<a href="/auth/login">Login</a>
-						</li>
-						<li>
-							<a href="/auth/signup">Sign Up</a>
-						</li>
-					} else {
-						<li>
-							<span>Welcome, { user.Username }</span>
-						</li>
-						<li></li>
-						<li>
-							<a href="/profile/edit" class="justify-between">
-								Edit Profile
-								<span class="badge">New</span>
-							</a>
-						</li>
-						<li><a href="/auth/logout">Logout</a></li>
-					}
-				</ul>
-			</div>
+			}
 		</div>
 	</div>
 }

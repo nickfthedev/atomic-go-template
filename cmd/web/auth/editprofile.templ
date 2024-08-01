@@ -2,7 +2,6 @@
 package auth
 
 import (
-	"github.com/google/uuid"
 	"my-go-template/cmd/web/layout"
 	"my-go-template/internal/config"
 	"my-go-template/internal/middleware"
@@ -17,9 +16,6 @@ templ EditProfilePage(r *http.Request) {
 }
 
 templ EditProfileForm(r *http.Request, user model.User, config *config.Config) {
-	if user.ID == uuid.Nil {
-		<meta http-equiv="refresh" content="0; url=/auth/login"/>
-	}
 	@layout.Base(r) {
 		<div class="flex justify-center w-full">
 			<div class="flex flex-col w-full p-12 gap-4">
@@ -92,7 +88,7 @@ templ EditProfileForm(r *http.Request, user model.User, config *config.Config) {
 						</svg>
 						<input type="password" class="grow" placeholder="Confirm Password" name="confirm_password"/>
 					</label>
-					if config.EnableAvatar {
+					if config.Auth.EnableAvatar {
 						<label class="form-control w-full max-w-xs">
 							<div class="label">
 								<span class="label-text">Upload new Avatar</span>

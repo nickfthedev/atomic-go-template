@@ -30,22 +30,36 @@ type Server struct {
 }
 
 func NewServer() *http.Server {
-
+	// Get Port from Environment Variables
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
+
 	// Create Config
 	// Can be used in middleware and handler as well
+	// If you dont want to change values its safe to remove them here.
+	// Default values are set in config.go
 	config := config.New(&config.Config{
-		Port:               port,
-		EnableAuth:         true,  // TODO Implement disable auth
-		EnableRegistration: true,  // TODO Implement disable login
-		EnableLogin:        true,  // TODO Implement disable login
-		EnableAvatar:       false, // TODO Implement disable avatar
+		Server: config.Server{
+			Port: port,
+		},
+		Theme: config.Theme{
+			StandardTheme:       "",
+			EnableThemeSwitcher: true,
+			EnableSidebar:       true,
+		},
+		Auth: config.Auth{
+			EnableAuth:          true,
+			EnableRegistration:  true,
+			EnableLogin:         true,
+			EnableAvatar:        true,
+			EnableResetPassword: true,
+			EnableVerifyEmail:   true,
+		},
 	})
 	db := database.New()                   // Create database service
 	database.MigrateUserSchema(db.GetDB()) // Automigrate
 	// Create server struct
 	NewServer := &Server{
-		port:        config.Port,
+		port:        config.Server.Port,
 		db:          db,
 		validate:    validator.New(validator.WithRequiredStructEnabled()),
 		formDecoder: form.NewDecoder(),

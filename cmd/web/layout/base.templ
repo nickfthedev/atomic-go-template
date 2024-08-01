@@ -7,11 +7,14 @@ import (
 )
 
 func getTheme(r *http.Request) string {
-	cookie, err := r.Cookie("theme")
-	if err == nil && cookie.Value != "" {
-		return cookie.Value
+	config := middleware.GetConfigFromContext(r)
+	if config.Theme.EnableThemeSwitcher {
+		cookie, err := r.Cookie("theme")
+		if err == nil && cookie.Value != "" {
+			return cookie.Value
+		}
 	}
-	return ""
+	return config.Theme.StandardTheme
 }
 
 templ Base(r *http.Request) {
@@ -28,13 +31,19 @@ templ Base(r *http.Request) {
 				<header class="flex">
 					@Header(user.GetUserFromContext(r), middleware.GetConfigFromContext(r))
 				</header>
-				@Sidebar() {
+				if middleware.GetConfigFromContext(r).Theme.EnableSidebar {
+					@Sidebar() {
+						<main class="justify-center w-full flex flex-1">
+							{ children... }
+						</main>
+					}
+				} else {
 					<main class="justify-center w-full flex flex-1">
 						{ children... }
 					</main>
 				}
 				<footer class="flex">
-					@Footer()
+					@Footer(middleware.GetConfigFromContext(r))
 				</footer>
 			</div>
 			<!-- We use this to remove erros from erros divs -->
