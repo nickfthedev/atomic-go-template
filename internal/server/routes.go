@@ -32,7 +32,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	fileServer := http.FileServer(http.FS(embed.Files))
 	r.Handle("/assets/*", fileServer)
 
-	// Public Folder
+	// Public Folder // TODO: Figure out how to preserve this folder in a Dockerfile
 	publicFileServer := http.FileServer(http.Dir("cmd/web/public"))
 	r.Handle("/public/*", http.StripPrefix("/public", publicFileServer))
 
