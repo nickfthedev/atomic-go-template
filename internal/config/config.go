@@ -68,6 +68,7 @@ func mergeConfig(base, overrides interface{}) {
 	}
 }
 
+// New returns the config with the default values
 func New(overrides *Config) *Config {
 	config := &Config{
 		Server: Server{

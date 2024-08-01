@@ -55,8 +55,12 @@ func NewServer() *http.Server {
 			EnableVerifyEmail:   true,
 		},
 	})
-	db := database.New()                   // Create database service
-	database.MigrateUserSchema(db.GetDB()) // Automigrate
+
+	// Create database service
+	db := database.New()
+	// Automigrate
+	database.MigrateUserSchema(db.GetDB())
+
 	// Create server struct
 	NewServer := &Server{
 		port:        config.Server.Port,
