@@ -4,6 +4,8 @@ package auth
 import (
 	"github.com/google/uuid"
 	"my-go-template/cmd/web/layout"
+	"my-go-template/internal/config"
+	"my-go-template/internal/middleware"
 	"my-go-template/internal/model"
 	"my-go-template/internal/user"
 	"net/http"
@@ -11,10 +13,10 @@ import (
 
 // we need this workaround to inject the user data into the template
 templ EditProfilePage(r *http.Request) {
-	@EditProfileForm(r, user.GetUserFromContext(r))
+	@EditProfileForm(r, user.GetUserFromContext(r), middleware.GetConfigFromContext(r))
 }
 
-templ EditProfileForm(r *http.Request, user model.User) {
+templ EditProfileForm(r *http.Request, user model.User, config *config.Config) {
 	if user.ID == uuid.Nil {
 		<meta http-equiv="refresh" content="0; url=/auth/login"/>
 	}
@@ -90,15 +92,17 @@ templ EditProfileForm(r *http.Request, user model.User) {
 						</svg>
 						<input type="password" class="grow" placeholder="Confirm Password" name="confirm_password"/>
 					</label>
-					<label class="form-control w-full max-w-xs">
-						<div class="label">
-							<span class="label-text">Upload new Avatar</span>
-						</div>
-						<input name="avatar" type="file" class="file-input file-input-bordered w-full max-w-xs" accept=".png, .jpg, .jpeg"/>
-						<div class="label">
-							<span class="label-text-alt">Allowed: .png, .jpg, .jpeg</span>
-						</div>
-					</label>
+					if config.EnableAvatar {
+						<label class="form-control w-full max-w-xs">
+							<div class="label">
+								<span class="label-text">Upload new Avatar</span>
+							</div>
+							<input name="avatar" type="file" class="file-input file-input-bordered w-full max-w-xs" accept=".png, .jpg, .jpeg"/>
+							<div class="label">
+								<span class="label-text-alt">Allowed: .png, .jpg, .jpeg</span>
+							</div>
+						</label>
+					}
 					<button type="submit" class="btn btn-active btn-accent btn-block">Update</button>
 				</form>
 			</div>

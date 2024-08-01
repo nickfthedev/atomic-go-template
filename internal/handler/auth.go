@@ -99,7 +99,7 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 
 	var avatarPath string
 	// Check if avatar is set
-	if r.MultipartForm.File["avatar"] != nil {
+	if r.MultipartForm.File["avatar"] != nil && h.config.EnableAvatar {
 		avatarFile := r.MultipartForm.File["avatar"][0]
 
 		// Open File

@@ -2,11 +2,17 @@ package config
 
 // This struct is used to store the configuration of the application
 type Config struct {
-	Port               int
-	EnableAuth         bool
+	// Server Port. Default 8080
+	Port int
+	// TODO: Not implemented yet
+	EnableAuth bool
+	// TODO: Not implemented yet
 	EnableRegistration bool
-	EnableLogin        bool
-	EnableAvatar       bool
+	// TODO: Not implemented yet
+	EnableLogin bool
+	// Default to true
+	// Disable Avatars if you cannot store the images on the server or you don't want to
+	EnableAvatar bool
 }
 
 var instance *Config
@@ -18,7 +24,7 @@ func New(overrides *Config) *Config {
 			EnableAuth:         true, // Default to true
 			EnableRegistration: true, // Default to true
 			EnableLogin:        true, // Default to true
-			EnableAvatar:       true, // Default to true
+			EnableAvatar:       true,
 		}
 	}
 
