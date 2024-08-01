@@ -118,19 +118,22 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 	// Get user from database
 	user := r.Context().Value(mw.UserKey).(model.User)
 	user.Password = nil
-	// Update user
-	user.Username = input.Username
+	// Update User Name
+	updateFields := map[string]interface{}{
+		"username": input.Username,
+	}
 	// Check if email has changed and resend verification email
 	if user.Email != input.Email {
-		user.VerifiedAt = nil
-		// TODO: Use different Key for verification. If someone knows that the id is the verification key, they can use it to verify any email.
-		// TODO: Use a second table entry for new mail address and swap after verification.
+		verifyMailToken := uuid.New().String()
+		updateFields["verify_mail_token"] = &verifyMailToken
+		updateFields["verify_mail_address"] = &input.Email
+		updateFields["verified_at"] = nil
 		// Send verification email
 		client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
 		params := &resend.SendEmailRequest{
 			From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
 			To:      []string{user.Email},
-			Html:    "Please click the link below to verify your new email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + user.ID.String(),
+			Html:    "Please click the link below to verify your new email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
 			Subject: fmt.Sprintf("%s - Verify your new email address", os.Getenv("APP_NAME")),
 			// Cc:      []string{"cc@example.com"},
 			// Bcc:     []string{"bcc@example.com"},
@@ -143,7 +146,6 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Println("Verification email sent with ID:", sent.Id)
 	}
-	user.Email = input.Email
 
 	// Check if input password is not nil
 	if input.Password != nil && input.PasswordConfirm != nil {
@@ -162,12 +164,6 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		user.Password = &hashedPassword
-	}
-	// Prepare the fields to update
-	updateFields := map[string]interface{}{
-		"username":   input.Username,
-		"email":      input.Email,
-		"avatar_url": user.AvatarURL,
 	}
 
 	// Conditionally add the password field if it has been set
@@ -226,10 +222,13 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Save user to database
+	verifyMailToken := uuid.New().String()
 	user := model.User{
-		Username: input.Username,
-		Email:    input.Email,
-		Password: &hashedPassword,
+		Username:          input.Username,
+		Email:             input.Email,
+		VerifyMailAddress: &input.Email,
+		VerifyMailToken:   &verifyMailToken,
+		Password:          &hashedPassword,
 	}
 	if err := h.db.GetDB().Create(&user).Error; err != nil {
 		// Check if it's a unique constraint violation
@@ -250,7 +249,7 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	params := &resend.SendEmailRequest{
 		From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
 		To:      []string{user.Email},
-		Html:    "Thank you for signing up. Please click the link below to verify your email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + user.ID.String(),
+		Html:    "Thank you for signing up. Please click the link below to verify your email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
 		Subject: fmt.Sprintf("%s - Verify your email address", os.Getenv("APP_NAME")),
 		// Cc:      []string{"cc@example.com"},
 		// Bcc:     []string{"bcc@example.com"},
@@ -279,7 +278,7 @@ func (h *Handler) HandleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 
 	// Verify Token
 	user := model.User{}
-	if err := h.db.GetDB().First(&user, "id = ?", token).Error; err != nil {
+	if err := h.db.GetDB().First(&user, "verify_mail_token = ?", token).Error; err != nil {
 		addErrorHeaderHandler(templ.Handler(components.ErrorBannerFullPage(components.ErrorBannerData{
 			Messages: []string{"Invalid verification token"},
 		}))).ServeHTTP(w, r)
@@ -288,8 +287,12 @@ func (h *Handler) HandleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 
 	// If found set verifiedAt to the current Date
 	if user.VerifiedAt == nil {
-		h.db.GetDB().Model(&user).Update("verified_at", time.Now())
-		h.db.GetDB().Save(&user)
+
+		h.db.GetDB().Model(&user).Updates(map[string]interface{}{
+			"email":             *user.VerifyMailAddress,
+			"verified_at":       time.Now(),
+			"verify_mail_token": nil,
+		})
 	}
 
 	templ.Handler(components.SuccessResponseFullPage(components.SuccessResponseData{
