@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"io"
 	"my-go-template/cmd/web/auth"
 	"my-go-template/cmd/web/components"
 	mw "my-go-template/internal/middleware"
@@ -9,6 +10,7 @@ import (
 	"my-go-template/internal/utils"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/a-h/templ"
@@ -87,16 +89,97 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
+	// Parse Multipart Form
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error processing form data: " + err.Error()},
+		})).ServeHTTP(w, r)
+		return
+	}
+
+	var avatarPath string
+	// Check if avatar is set
+	if r.MultipartForm.File["avatar"] != nil {
+		avatarFile := r.MultipartForm.File["avatar"][0]
+
+		// Open File
+		avatar, err := avatarFile.Open()
+		if err != nil {
+			fmt.Println("Error opening avatar file:", err)
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Error processing form data: " + err.Error()},
+			})).ServeHTTP(w, r)
+			return
+		}
+		defer avatar.Close()
+
+		// Read the first 512 bytes to detect content type
+		buffer := make([]byte, 512)
+		_, err = avatar.Read(buffer)
+		if err != nil && err != io.EOF {
+			fmt.Println("Error reading avatar file:", err)
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Error processing form data: " + err.Error()},
+			})).ServeHTTP(w, r)
+			return
+		}
+
+		// Detect content type
+		contentType := http.DetectContentType(buffer)
+
+		// Check if the content type is an allowed image format
+		if contentType != "image/jpeg" && contentType != "image/png" {
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Invalid file format. Please upload a PNG or JPEG image."},
+			})).ServeHTTP(w, r)
+			return
+		}
+
+		// Reset the file pointer to the beginning
+		avatar.Seek(0, 0)
+
+		// Ensure the directory exists
+		if err := os.MkdirAll("cmd/web/public/avatars", os.ModePerm); err != nil {
+			fmt.Println("Error creating directory:", err)
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Error processing form data: " + err.Error()},
+			})).ServeHTTP(w, r)
+			return
+		}
+
+		// Generate a random filename
+		avatarPath = uuid.New().String() + "-" + time.Now().Format("060102150405") + "." + strings.Split(avatarFile.Filename, ".")[1]
+
+		// Save Avatar to public folder
+		file, err := os.Create("cmd/web/public/avatars/" + avatarPath)
+		if err != nil {
+			fmt.Println("Error creating file:", err)
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Error processing form data: " + err.Error()},
+			})).ServeHTTP(w, r)
+			return
+		}
+		defer file.Close()
+
+		// Copy the file content
+		if _, err := io.Copy(file, avatar); err != nil {
+			fmt.Println("Error copying file content:", err)
+			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+				Messages: []string{"Error processing form data: " + err.Error()},
+			})).ServeHTTP(w, r)
+			return
+		}
+	}
+
 	// Declare the input struct
 	var input model.EditProfileInput
 	// Parse and bind the form data to the input struct
 	if err := utils.ParseAndBindForm(r, &input, h.formDecoder); err != nil {
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+		templ.Handler(components.ErrorBanner(components.ErrorBannerData{
 			Messages: []string{"Error processing form data: " + err.Error()},
-		}))).ServeHTTP(w, r)
+		})).ServeHTTP(w, r)
 		return
 	}
-
 	// Handle empty password fields
 	if input.Password != nil && *input.Password == "" {
 		input.Password = nil
@@ -118,10 +201,16 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 	// Get user from database
 	user := r.Context().Value(mw.UserKey).(model.User)
 	user.Password = nil
-	// Update User Name
+	// Update User Name and Avatar Path, nil values will be skipped on saving
 	updateFields := map[string]interface{}{
 		"username": input.Username,
 	}
+
+	// Only update avatar_url if a new avatar is uploaded
+	if avatarPath != "" {
+		updateFields["avatar_url"] = avatarPath
+	}
+
 	// Check if email has changed and resend verification email
 	if user.Email != input.Email {
 		verifyMailToken := uuid.New().String()

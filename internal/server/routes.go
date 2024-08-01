@@ -32,6 +32,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	fileServer := http.FileServer(http.FS(embed.Files))
 	r.Handle("/assets/*", fileServer)
 
+	// Public Folder
+	publicFileServer := http.FileServer(http.Dir("cmd/web/public"))
+	r.Handle("/public/*", http.StripPrefix("/public", publicFileServer))
+
 	// API Test Endpoint
 	r.Get("/api", h.HelloWorldHandler)
 	// Health Check

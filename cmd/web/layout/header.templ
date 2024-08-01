@@ -31,10 +31,17 @@ templ Header(user model.User) {
 				<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
 					<div class="w-10 rounded-full">
 						if user.AvatarURL != nil {
-							<img
-								alt="User Avatar"
-								src={ *user.AvatarURL }
-							/>
+							if strings.HasPrefix(*user.AvatarURL, "https://") {
+								<img
+									alt="User Avatar"
+									src={ *user.AvatarURL }
+								/>
+							} else {
+								<img
+									alt="User Avatar"
+									src={ "/public/avatars/" + *user.AvatarURL }
+								/>
+							}
 						} else {
 							<div class="avatar placeholder">
 								<div class="bg-neutral text-neutral-content w-10 rounded-full">
