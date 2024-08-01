@@ -14,6 +14,8 @@ import (
 	"my-go-template/internal/database"
 )
 
+// TODO Config with Features Flags
+
 type Server struct {
 	port int
 	// The database instance
