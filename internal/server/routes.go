@@ -62,16 +62,21 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Auth Group goes here
 	if s.config.Auth.EnableAuth {
 		r.Route("/auth", func(r chi.Router) {
+			// Signup Routes
 			if s.config.Auth.EnableRegistration {
 				r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
 					templ.Handler(auth.SignupForm(r)).ServeHTTP(w, r)
 				})
+			}
+			// Login Routes
+			if s.config.Auth.EnableLogin {
 				r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
 					templ.Handler(auth.LoginForm(r)).ServeHTTP(w, r)
 				})
 				r.Post("/login", h.HandleLogin)
 				r.Get("/logout", h.HandleLogout)
 			}
+			// Reset Password Routes
 			if s.config.Auth.EnableResetPassword {
 				r.Get("/forget-password", func(w http.ResponseWriter, r *http.Request) {
 					templ.Handler(auth.ForgetPasswordForm(r)).ServeHTTP(w, r)
@@ -80,15 +85,17 @@ func (s *Server) RegisterRoutes() http.Handler {
 				r.Get("/reset-password", h.HandleResetPassword)
 				r.Post("/reset-password", h.HandleResetPasswordSubmit)
 			}
+			// Verify Email Routes
 			if s.config.Auth.EnableVerifyEmail {
 				r.Get("/verify-email", h.HandleVerifyEmail)
 			}
-		})
+		}) // End of Auth Group
 
+		// Profile Routes
 		r.Get("/profile/edit", m.IsLoggedIn(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(auth.EditProfilePage(r)).ServeHTTP(w, r)
 		}))
 		r.Post("/profile/edit", m.IsLoggedIn(h.HandleEditProfile))
-	}
+	} // End of Auth Feature Routes
 	return r
 }
