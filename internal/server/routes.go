@@ -21,9 +21,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Use(middleware.Logger)
 
 	// Create a new handler instance
-	h := handler.NewHandler(s.db, s.validate, s.formDecoder)
+	h := handler.NewHandler(s.db, s.validate, s.formDecoder, s.config)
 	// Create a new middleware instance for own middlewares
-	m := mw.NewMiddleware(s.db, s.validate, s.formDecoder)
+	m := mw.NewMiddleware(s.db, s.validate, s.formDecoder, s.config)
 
 	// Checks for the JWT token in the cookie and sets the user data into the context
 	r.Use(m.JWTMiddleware)

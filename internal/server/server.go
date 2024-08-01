@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	_ "github.com/joho/godotenv/autoload"
 
+	"my-go-template/internal/config"
 	"my-go-template/internal/database"
 )
 
@@ -24,18 +25,30 @@ type Server struct {
 	validate *validator.Validate
 	// The form decoder instance
 	formDecoder *form.Decoder
+	// The config instance
+	config *config.Config
 }
 
 func NewServer() *http.Server {
+
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	// Load Config
+	config := config.New(&config.Config{
+		Port:               port,
+		EnableAuth:         true, // TODO Implement disable auth
+		EnableRegistration: true, // TODO Implement disable login
+		EnableLogin:        true, // TODO Implement disable login
+		EnableAvatar:       true, // TODO Implement disable avatar
+	})
 	db := database.New()                   // Create database service
 	database.MigrateUserSchema(db.GetDB()) // Automigrate
 	// Create server struct
 	NewServer := &Server{
-		port:        port,
+		port:        config.Port,
 		db:          db,
 		validate:    validator.New(validator.WithRequiredStructEnabled()),
 		formDecoder: form.NewDecoder(),
+		config:      config,
 	}
 
 	// Declare Server config
