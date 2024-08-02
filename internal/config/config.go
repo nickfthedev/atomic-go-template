@@ -6,7 +6,6 @@ import (
 	"reflect"
 )
 
-// TODO: Dependencies?
 // For example Email-Provider and Forget Password or Verify Mail
 
 // This struct is used to store the configuration of the application

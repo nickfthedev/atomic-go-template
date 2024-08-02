@@ -20,9 +20,17 @@ func (m *Middleware) IsLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// TODO: Check if the user object exists
 		_, ok := r.Context().Value(UserKey).(model.User)
 		if !ok {
+			// Unset the JWT cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     "jwt",
+				Value:    "",
+				Path:     "/",
+				HttpOnly: true,
+				Secure:   true,
+				MaxAge:   -1,
+			})
 			http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
 			return
 		}
