@@ -49,16 +49,6 @@ type Database struct {
 	Type DatabaseType
 }
 
-type Theme struct {
-	// Set Standard Theme. Default ""
-	// We use DaisyUI. If you want to add more themes you can do this in tailwind.config.js
-	StandardTheme string
-	// Enable Theme Switcher. Default true
-	EnableThemeSwitcher bool
-	// Enable Sidebar. Default true
-	EnableSidebar bool
-}
-
 type Mail struct {
 	// Enable Mail. Default true
 	EnableMail bool
@@ -69,9 +59,23 @@ type Mail struct {
 type MailProvider string
 
 const (
+	// Resend
 	MailProviderResend MailProvider = "resend"
-	//MailProviderIMAP   MailProvider = "imap" // Not implemented yet
+	// Print Mails to Console for Debug / Dev
+	MailProviderConsole MailProvider = "console"
+	// Sent Mails via Imap NOT IMPLEMENTED YET
+	//MailProviderIMAP   MailProvider = "imap"
 )
+
+type Theme struct {
+	// Set Standard Theme. Default ""
+	// We use DaisyUI. If you want to add more themes you can do this in tailwind.config.js
+	StandardTheme string
+	// Enable Theme Switcher. Default true
+	EnableThemeSwitcher bool
+	// Enable Sidebar. Default true
+	EnableSidebar bool
+}
 
 type Auth struct {
 	// Enable Authentication. Default true. Disables the complete user authentification and all routes that need authentication. Removes User menu from the header

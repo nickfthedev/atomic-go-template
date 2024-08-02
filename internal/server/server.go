@@ -62,7 +62,7 @@ func NewServer() *http.Server {
 		},
 		Mail: config.Mail{
 			EnableMail:   true,
-			MailProvider: config.MailProviderResend,
+			MailProvider: config.MailProviderConsole,
 		},
 	})
 

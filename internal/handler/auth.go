@@ -264,7 +264,13 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 		updateFields["password"] = *user.Password
 	}
 	// Save user to database
-	h.db.GetDB().Model(&user).Updates(updateFields)
+	err := h.db.GetDB().Model(&user).Updates(updateFields).Error
+	if err != nil {
+		templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Error updating user: " + err.Error()},
+		})).ServeHTTP(w, r)
+		return
+	}
 	// Return a success response
 	templ.Handler(components.SuccessResponse(components.SuccessResponseData{
 		Message: "Profile updated successfully. ",
