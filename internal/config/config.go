@@ -11,6 +11,8 @@ import (
 
 // This struct is used to store the configuration of the application
 type Config struct {
+	// App Settings
+	App App
 	// Server Settings
 	Server Server
 	// Database Settings
@@ -21,6 +23,13 @@ type Config struct {
 	Auth Auth
 	// Mail Settings
 	Mail Mail
+}
+
+type App struct {
+	// App Name. Default "Go-Template"
+	Name string
+	// App URL. Default "http://localhost:8080"
+	Url string
 }
 
 type Server struct {
@@ -104,31 +113,15 @@ func (c *Config) validateDependencies() {
 	}
 }
 
-// This function merges the base config with the overrides config set in the server.go
-func mergeConfig(base, overrides interface{}) {
-	baseVal := reflect.ValueOf(base).Elem()
-	overridesVal := reflect.ValueOf(overrides).Elem()
-
-	for i := 0; i < baseVal.NumField(); i++ {
-		baseField := baseVal.Field(i)
-		overridesField := overridesVal.Field(i)
-
-		if baseField.Kind() == reflect.Struct {
-			mergeConfig(baseField.Addr().Interface(), overridesField.Addr().Interface())
-		} else {
-			// For boolean fields, we want to set them even if they're false
-			if overridesField.Kind() == reflect.Bool || !overridesField.IsZero() {
-				baseField.Set(overridesField)
-			}
-		}
-	}
-}
-
 // New returns the config with the default values
 func New(overrides *Config) *Config {
 	config := &Config{
 		Server: Server{
 			Port: 8080, // Default port
+		},
+		App: App{
+			Name: os.Getenv("APP_NAME"),
+			Url:  os.Getenv("APP_URL"),
 		},
 		Database: Database{
 			Enabled: true,
@@ -182,12 +175,40 @@ func (c *Config) CheckEnvironmentVariables() error {
 		}
 	}
 	if c.Mail.MailProvider == MailProviderResend {
-		if os.Getenv("RESEND_API_KEY") == "" {
-			fmt.Println("Warning: RESEND_API_KEY environment variable is not set")
+		if os.Getenv("RESEND_API_KEY") == "" || os.Getenv("RESEND_FROM_EMAIL") == "" || os.Getenv("RESEND_FROM_NAME") == "" {
+			fmt.Println("Warning: RESEND_API_KEY, RESEND_FROM_EMAIL or RESEND_FROM_NAME environment variable is not set")
 			c.Mail.EnableMail = false
 			fmt.Println("Mail functionality has been disabled")
 			return nil
 		}
 	}
+	// Check for essential environment variables
+	essentialEnvVars := []string{"APP_NAME", "APP_URL", "SECRET_KEY"}
+	for _, envVar := range essentialEnvVars {
+		if os.Getenv(envVar) == "" {
+			fmt.Printf("Error: %s environment variable is not set\n", envVar)
+			os.Exit(1)
+		}
+	}
 	return nil
+}
+
+// This function merges the base config with the overrides config set in the server.go
+func mergeConfig(base, overrides interface{}) {
+	baseVal := reflect.ValueOf(base).Elem()
+	overridesVal := reflect.ValueOf(overrides).Elem()
+
+	for i := 0; i < baseVal.NumField(); i++ {
+		baseField := baseVal.Field(i)
+		overridesField := overridesVal.Field(i)
+
+		if baseField.Kind() == reflect.Struct {
+			mergeConfig(baseField.Addr().Interface(), overridesField.Addr().Interface())
+		} else {
+			// For boolean fields, we want to set them even if they're false
+			if overridesField.Kind() == reflect.Bool || !overridesField.IsZero() {
+				baseField.Set(overridesField)
+			}
+		}
+	}
 }

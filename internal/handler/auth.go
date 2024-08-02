@@ -17,7 +17,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/resend/resend-go/v2"
 )
 
 // HandleLogin handles the login form submission, validates the input and redirects to the home page after successful login
@@ -226,22 +225,16 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 			updateFields["verify_mail_address"] = &input.Email
 			updateFields["verified_at"] = nil
 			// Send verification email
-			client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
-			params := &resend.SendEmailRequest{
-				From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
-				To:      []string{user.Email},
-				Html:    "Please click the link below to verify your new email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
-				Subject: fmt.Sprintf("%s - Verify your new email address", os.Getenv("APP_NAME")),
-				// Cc:      []string{"cc@example.com"},
-				// Bcc:     []string{"bcc@example.com"},
-				// ReplyTo: "replyto@example.com",
-			}
-			sent, err := client.Emails.Send(params)
+
+			err := h.mail.Send(user.Email,
+				h.config.App.Name+" - Verify your new email address",
+				"Please click the link below to verify your new email address: "+h.config.App.Url+"/auth/verify-email?token="+verifyMailToken,
+			)
+
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
-			fmt.Println("Verification email sent with ID:", sent.Id)
 		} else {
 			updateFields["email"] = input.Email
 		}
@@ -345,22 +338,11 @@ func (h *Handler) HandleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.config.Auth.EnableVerifyEmail {
 		// Send verification email
-		client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
-		params := &resend.SendEmailRequest{
-			From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
-			To:      []string{user.Email},
-			Html:    "Thank you for signing up. Please click the link below to verify your email address: " + os.Getenv("APP_URL") + "/auth/verify-email?token=" + verifyMailToken,
-			Subject: fmt.Sprintf("%s - Verify your email address", os.Getenv("APP_NAME")),
-			// Cc:      []string{"cc@example.com"},
-			// Bcc:     []string{"bcc@example.com"},
-			// ReplyTo: "replyto@example.com",
-		}
-		sent, err := client.Emails.Send(params)
+		err := h.mail.Send(user.Email, h.config.App.Name+" - Verify your email address", "Thank you for signing up. Please click the link below to verify your email address: "+h.config.App.Url+"/auth/verify-email?token="+verifyMailToken)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		fmt.Println("Verification email sent with ID:", sent.Id)
 	}
 	// Return a success response
 	if h.config.Auth.EnableVerifyEmail {
@@ -445,22 +427,14 @@ func (h *Handler) HandleForgetPassword(w http.ResponseWriter, r *http.Request) {
 		h.db.GetDB().Save(&user)
 
 		// Send verification email
-		client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
-		params := &resend.SendEmailRequest{
-			From:    fmt.Sprintf("%s <%s>", os.Getenv("APP_NAME"), os.Getenv("RESEND_FROM_EMAIL")),
-			To:      []string{user.Email},
-			Html:    "Please click the link below to reset your password: " + os.Getenv("APP_URL") + "/auth/reset-password?token=" + *user.PasswordResetToken,
-			Subject: fmt.Sprintf("%s - Reset your password", os.Getenv("APP_NAME")),
-			// Cc:      []string{"cc@example.com"},
-			// Bcc:     []string{"bcc@example.com"},
-			// ReplyTo: "replyto@example.com",
-		}
-
-		sent, err := client.Emails.Send(params)
+		err := h.mail.Send(user.Email,
+			h.config.App.Name+" - Reset your password",
+			"Please click the link below to reset your password: "+h.config.App.Url+"/auth/reset-password?token="+*user.PasswordResetToken,
+		)
 		if err != nil {
 			fmt.Println(err.Error())
+			return
 		}
-		fmt.Println("Verification email sent with ID:", sent.Id)
 	} // END IF USER EXISTS
 
 	addSuccessHeaderHandler(templ.Handler(components.SuccessResponse(components.SuccessResponseData{

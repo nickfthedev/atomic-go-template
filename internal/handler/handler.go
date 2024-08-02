@@ -3,6 +3,7 @@ package handler
 import (
 	"my-go-template/internal/config"
 	"my-go-template/internal/database"
+	"my-go-template/internal/mail"
 	"net/http"
 
 	"github.com/go-playground/form/v4"
@@ -14,10 +15,11 @@ type Handler struct {
 	validate    *validator.Validate
 	formDecoder *form.Decoder
 	config      *config.Config
+	mail        mail.Service
 }
 
-func NewHandler(db database.Service, validate *validator.Validate, formDecoder *form.Decoder, config *config.Config) *Handler {
-	return &Handler{db: db, validate: validate, formDecoder: formDecoder, config: config}
+func NewHandler(db database.Service, validate *validator.Validate, formDecoder *form.Decoder, config *config.Config, mail mail.Service) *Handler {
+	return &Handler{db: db, validate: validate, formDecoder: formDecoder, config: config, mail: mail}
 }
 
 // We use this to re-target the errors div and swap the innerHTML, instead of the default behavior of appending to the end of the div.

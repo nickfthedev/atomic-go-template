@@ -21,7 +21,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Use(middleware.Logger)
 
 	// Create a new handler instance
-	h := handler.NewHandler(s.db, s.validate, s.formDecoder, s.config)
+	h := handler.NewHandler(s.db, s.validate, s.formDecoder, s.config, s.mail)
 	// Create a new middleware instance for own middlewares
 	m := mw.NewMiddleware(s.db, s.validate, s.formDecoder, s.config)
 

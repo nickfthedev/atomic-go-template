@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 
 	"my-go-template/internal/config"
 	"my-go-template/internal/database"
+	"my-go-template/internal/mail"
 )
 
 type Server struct {
@@ -25,6 +27,8 @@ type Server struct {
 	formDecoder *form.Decoder
 	// The config instance
 	config *config.Config
+	// The mail service instance
+	mail mail.Service
 }
 
 func NewServer() *http.Server {
@@ -57,7 +61,8 @@ func NewServer() *http.Server {
 			EnableVerifyEmail:   true,
 		},
 		Mail: config.Mail{
-			EnableMail: false,
+			EnableMail:   true,
+			MailProvider: config.MailProviderResend,
 		},
 	})
 
@@ -66,6 +71,16 @@ func NewServer() *http.Server {
 	// Automigrate
 	database.MigrateUserSchema(db.GetDB())
 
+	// Mail Service
+	var mailService mail.Service
+	var err error
+	if config.Mail.EnableMail {
+		mailService, err = mail.NewMailProvider(config.Mail)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// Create server struct
 	NewServer := &Server{
 		port:        config.Server.Port,
@@ -73,6 +88,7 @@ func NewServer() *http.Server {
 		validate:    validator.New(validator.WithRequiredStructEnabled()),
 		formDecoder: form.NewDecoder(),
 		config:      config,
+		mail:        mailService,
 	}
 
 	// Declare Server config
