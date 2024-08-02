@@ -218,23 +218,14 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if email has changed and resend verification email, if enabled
+	var verifyMailToken string
 	if user.Email != input.Email {
 		if h.config.Auth.EnableVerifyEmail {
-			verifyMailToken := uuid.New().String()
+			verifyMailToken = uuid.New().String()
 			updateFields["verify_mail_token"] = &verifyMailToken
 			updateFields["verify_mail_address"] = &input.Email
 			updateFields["verified_at"] = nil
-			// Send verification email
-
-			err := h.mail.Send(user.Email,
-				h.config.App.Name+" - Verify your new email address",
-				"Please click the link below to verify your new email address: "+h.config.App.Url+"/auth/verify-email?token="+verifyMailToken,
-			)
-
-			if err != nil {
-				fmt.Println(err.Error())
-				return
-			}
+			// Verification Mail will be sent after the user is updated successfully
 		} else {
 			updateFields["email"] = input.Email
 		}
@@ -270,6 +261,17 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 			Messages: []string{"Error updating user: " + err.Error()},
 		})).ServeHTTP(w, r)
 		return
+	}
+	if user.Email != input.Email && h.config.Auth.EnableVerifyEmail {
+		// Send verification email
+		err := h.mail.Send(user.Email,
+			h.config.App.Name+" - Verify your new email address",
+			"Please click the link below to verify your new email address: "+h.config.App.Url+"/auth/verify-email?token="+verifyMailToken,
+		)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 	}
 	// Return a success response
 	templ.Handler(components.SuccessResponse(components.SuccessResponseData{
@@ -381,7 +383,6 @@ func (h *Handler) HandleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 
 	// If found set verifiedAt to the current Date
 	if user.VerifiedAt == nil {
-
 		h.db.GetDB().Model(&user).Updates(map[string]interface{}{
 			"email":             *user.VerifyMailAddress,
 			"verified_at":       time.Now(),
