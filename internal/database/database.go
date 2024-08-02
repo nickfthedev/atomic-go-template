@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"my-go-template/internal/config"
 	"os"
 	"strconv"
 	"time"
@@ -36,16 +37,16 @@ var (
 	dbInstance *service
 )
 
-func New() Service {
+func New(c config.Database) Service {
 	// Reuse Connection
 	if dbInstance != nil {
 		return dbInstance
 	}
 	var newService Service
-	switch dbType {
-	case "postgres":
+	switch c.Type {
+	case config.DatabaseTypePostgres:
 		newService = NewPostgresService()
-	case "sqlite":
+	case config.DatabaseTypeSQLite:
 		newService = NewSQLiteService()
 	default:
 		log.Fatalf("Unsupported database type: %s", dbType)

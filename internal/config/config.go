@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 )
 
@@ -11,6 +13,8 @@ import (
 type Config struct {
 	// Server Settings
 	Server Server
+	// Database Settings
+	Database Database
 	// Theme Settings
 	Theme Theme
 	// Auth Settings
@@ -19,11 +23,22 @@ type Config struct {
 	Mail Mail
 }
 
-// DATABASE -> Config in database.go
-
 type Server struct {
 	// Server Port. Default 8080
 	Port int
+}
+
+type DatabaseType string
+
+const (
+	DatabaseTypeSQLite   DatabaseType = "sqlite"
+	DatabaseTypePostgres DatabaseType = "postgres"
+)
+
+type Database struct {
+	Enabled bool
+	// Database Type. Default "sqlite"
+	Type DatabaseType
 }
 
 type Theme struct {
@@ -39,7 +54,16 @@ type Theme struct {
 type Mail struct {
 	// Enable Mail. Default true
 	EnableMail bool
+	// Mail Provider. Default MailProviderResend
+	MailProvider MailProvider
 }
+
+type MailProvider string
+
+const (
+	MailProviderResend MailProvider = "resend"
+	//MailProviderIMAP   MailProvider = "imap" // Not implemented yet
+)
 
 type Auth struct {
 	// Enable Authentication. Default true. Disables the complete user authentification and all routes that need authentication. Removes User menu from the header
@@ -62,6 +86,9 @@ type Auth struct {
 
 // validateDependencies checks and adjusts dependent settings
 func (c *Config) validateDependencies() {
+	if !c.Database.Enabled {
+		c.Auth.EnableAuth = false
+	}
 	// If mail is disabled
 	if !c.Mail.EnableMail {
 		c.Auth.EnableResetPassword = false
@@ -103,6 +130,10 @@ func New(overrides *Config) *Config {
 		Server: Server{
 			Port: 8080, // Default port
 		},
+		Database: Database{
+			Enabled: true,
+			Type:    DatabaseTypeSQLite,
+		},
 		Theme: Theme{
 			StandardTheme:       "",
 			EnableThemeSwitcher: true,
@@ -117,7 +148,8 @@ func New(overrides *Config) *Config {
 			EnableVerifyEmail:   true, // Default to true
 		},
 		Mail: Mail{
-			EnableMail: true, // Default to true
+			EnableMail:   true,               // Default to true
+			MailProvider: MailProviderResend, // Default to MailProviderResend
 		},
 	}
 
@@ -125,7 +157,37 @@ func New(overrides *Config) *Config {
 		mergeConfig(config, overrides)
 	}
 
+	config.CheckEnvironmentVariables()
 	config.validateDependencies()
 
 	return config
+}
+
+// Checks if specific environment variables are set
+func (c *Config) CheckEnvironmentVariables() error {
+	if c.Database.Type == DatabaseTypePostgres {
+		if os.Getenv("DB_HOST") == "" || os.Getenv("DB_DATABASE") == "" || os.Getenv("DB_PORT") == "" || os.Getenv("DB_USER") == "" || os.Getenv("DB_PASSWORD") == "" {
+			fmt.Println("Warning: DB_HOST, DB_DATABASE, DB_PORT, DB_USER or DB_PASSWORD environment variable is not set")
+			c.Database.Enabled = false
+			fmt.Println("Database functionality has been disabled")
+			return nil
+		}
+	}
+	if c.Database.Type == DatabaseTypeSQLite {
+		if os.Getenv("DB_FILE") == "" {
+			fmt.Println("Warning: DB_FILE environment variable is not set")
+			fmt.Println("Defaulting to 'db/dev.sqlite'")
+			c.Database.Type = DatabaseTypeSQLite
+			return nil
+		}
+	}
+	if c.Mail.MailProvider == MailProviderResend {
+		if os.Getenv("RESEND_API_KEY") == "" {
+			fmt.Println("Warning: RESEND_API_KEY environment variable is not set")
+			c.Mail.EnableMail = false
+			fmt.Println("Mail functionality has been disabled")
+			return nil
+		}
+	}
+	return nil
 }

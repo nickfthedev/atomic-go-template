@@ -39,6 +39,10 @@ func NewServer() *http.Server {
 		Server: config.Server{
 			Port: port,
 		},
+		Database: config.Database{
+			Enabled: true,
+			Type:    config.DatabaseTypeSQLite,
+		},
 		Theme: config.Theme{
 			StandardTheme:       "",
 			EnableThemeSwitcher: true,
@@ -58,7 +62,7 @@ func NewServer() *http.Server {
 	})
 
 	// Create database service
-	db := database.New()
+	db := database.New(config.Database)
 	// Automigrate
 	database.MigrateUserSchema(db.GetDB())
 

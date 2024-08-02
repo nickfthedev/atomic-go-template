@@ -18,7 +18,10 @@ func NewSQLiteService() Service {
 	if dbInstance != nil {
 		return dbInstance
 	}
-	db, err := gorm.Open(sqlite.Open(os.Getenv("DB_FILE")), &gorm.Config{})
+	if file == "" {
+		file = "db/dev.sqlite"
+	}
+	db, err := gorm.Open(sqlite.Open(file), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
