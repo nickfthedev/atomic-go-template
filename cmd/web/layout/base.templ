@@ -33,12 +33,12 @@ templ Base(r *http.Request) {
 				</header>
 				if middleware.GetConfigFromContext(r).Theme.EnableSidebar {
 					@Sidebar() {
-						<main class="justify-center w-full flex flex-1">
+						<main class="justify-center w-full flex flex-1 mt-5 mb-5">
 							{ children... }
 						</main>
 					}
 				} else {
-					<main class="justify-center w-full flex flex-1">
+					<main class="justify-center w-full flex flex-1 mt-5 mb-5">
 						{ children... }
 					</main>
 				}

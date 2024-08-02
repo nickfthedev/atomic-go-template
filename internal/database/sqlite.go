@@ -18,6 +18,10 @@ func NewSQLiteService() Service {
 	if dbInstance != nil {
 		return dbInstance
 	}
+	// Make sure the directory db exists
+	if _, err := os.Stat("db"); os.IsNotExist(err) {
+		os.Mkdir("db", 0755)
+	}
 	if file == "" {
 		file = "db/dev.sqlite"
 	}

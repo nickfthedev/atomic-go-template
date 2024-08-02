@@ -99,6 +99,6 @@ func NewServer() *http.Server {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-
+	fmt.Printf("Server is running on port: %d", NewServer.port)
 	return server
 }
