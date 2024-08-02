@@ -31,3 +31,9 @@ main
 
 # Public avatars
 cmd/web/public/avatars
+
+# DB
+db
+
+# Node Modules
+node_modules

@@ -63,6 +63,13 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.VerifiedAt == nil && h.config.Auth.EnableVerifyEmail {
+		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
+			Messages: []string{"Please verify your email address before logging in"},
+		}))).ServeHTTP(w, r)
+		return
+	}
+
 	// Set Cookie
 	if err := utils.CreateJWTCookie(w, user.ID.String()); err != nil {
 		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{

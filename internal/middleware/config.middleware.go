@@ -18,6 +18,7 @@ func (m *Middleware) ConfigMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// GetConfigFromContext returns the config from the context
 func GetConfigFromContext(r *http.Request) *config.Config {
 	config, ok := r.Context().Value(ConfigKey).(*config.Config)
 	if !ok {

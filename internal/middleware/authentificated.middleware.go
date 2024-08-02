@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"my-go-template/internal/model"
 	"my-go-template/internal/utils"
 	"net/http"
 )
@@ -15,6 +16,13 @@ func (m *Middleware) IsLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 
 		_, err := utils.VerifyJWTCookie(r)
 		if err != nil {
+			http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
+			return
+		}
+
+		// TODO: Check if the user object exists
+		_, ok := r.Context().Value(UserKey).(model.User)
+		if !ok {
 			http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
 			return
 		}

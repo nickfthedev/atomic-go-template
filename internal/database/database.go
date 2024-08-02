@@ -9,7 +9,6 @@ import (
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -32,12 +31,8 @@ type service struct {
 }
 
 var (
-	database   = os.Getenv("DB_DATABASE")
-	password   = os.Getenv("DB_PASSWORD")
-	username   = os.Getenv("DB_USERNAME")
-	port       = os.Getenv("DB_PORT")
-	host       = os.Getenv("DB_HOST")
-	schema     = os.Getenv("DB_SCHEMA")
+	// Type
+	dbType     = os.Getenv("DB_TYPE")
 	dbInstance *service
 )
 
@@ -46,14 +41,19 @@ func New() Service {
 	if dbInstance != nil {
 		return dbInstance
 	}
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable search_path=%s", host, username, password, database, port, schema)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal(err)
+	var newService Service
+	switch dbType {
+	case "postgres":
+		newService = NewPostgresService()
+	case "sqlite":
+		newService = NewSQLiteService()
+	default:
+		log.Fatalf("Unsupported database type: %s", dbType)
 	}
-	dbInstance = &service{
-		db: db,
+	if newService == nil {
+		log.Fatalf("Failed to initialize database service for type: %s", dbType)
 	}
+	dbInstance = newService.(*service)
 	return dbInstance
 }
 

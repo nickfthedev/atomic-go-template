@@ -4,6 +4,9 @@ import (
 	"reflect"
 )
 
+// TODO: Dependencies?
+// For example Email-Provider and Forget Password or Verify Mail
+
 // This struct is used to store the configuration of the application
 type Config struct {
 	// Server Settings
@@ -12,7 +15,11 @@ type Config struct {
 	Theme Theme
 	// Auth Settings
 	Auth Auth
+	// Mail Settings
+	Mail Mail
 }
+
+// DATABASE -> Config in database.go
 
 type Server struct {
 	// Server Port. Default 8080
@@ -27,6 +34,11 @@ type Theme struct {
 	EnableThemeSwitcher bool
 	// Enable Sidebar. Default true
 	EnableSidebar bool
+}
+
+type Mail struct {
+	// Enable Mail. Default true
+	EnableMail bool
 }
 
 type Auth struct {
@@ -46,6 +58,23 @@ type Auth struct {
 	EnableResetPassword bool
 	// Enable Verify Email. Default true
 	EnableVerifyEmail bool
+}
+
+// validateDependencies checks and adjusts dependent settings
+func (c *Config) validateDependencies() {
+	// If mail is disabled
+	if !c.Mail.EnableMail {
+		c.Auth.EnableResetPassword = false
+		c.Auth.EnableVerifyEmail = false
+	}
+
+	// If registration is disabled
+	if !c.Auth.EnableAuth {
+		c.Auth.EnableLogin = false
+		c.Auth.EnableRegistration = false
+		c.Auth.EnableResetPassword = false
+		c.Auth.EnableVerifyEmail = false
+	}
 }
 
 // This function merges the base config with the overrides config set in the server.go
@@ -87,11 +116,16 @@ func New(overrides *Config) *Config {
 			EnableResetPassword: true, // Default to true
 			EnableVerifyEmail:   true, // Default to true
 		},
+		Mail: Mail{
+			EnableMail: true, // Default to true
+		},
 	}
 
 	if overrides != nil {
 		mergeConfig(config, overrides)
 	}
+
+	config.validateDependencies()
 
 	return config
 }

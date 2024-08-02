@@ -67,6 +67,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 				r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
 					templ.Handler(auth.SignupForm(r)).ServeHTTP(w, r)
 				})
+				r.Post("/signup", h.HandleSignup)
 			}
 			// Login Routes
 			if s.config.Auth.EnableLogin {

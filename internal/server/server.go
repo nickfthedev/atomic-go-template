@@ -52,6 +52,9 @@ func NewServer() *http.Server {
 			EnableResetPassword: true,
 			EnableVerifyEmail:   true,
 		},
+		Mail: config.Mail{
+			EnableMail: false,
+		},
 	})
 
 	// Create database service
