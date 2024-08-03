@@ -1,0 +1,23 @@
+# Avoid writing to toml directly. Use your .env file instead
+
+name = "My-Go-Template"
+handle = "my-go-template"
+client_id = "54f43b9d1238b28aef26e0cc4f456497"
+application_url = "https://b7b9-2a04-4540-7414-ba00-b627-61e0-5b9f-f0b9.ngrok-free.app"
+embedded = true
+extension_directories = [ "../extension/extensions/*" ]
+
+[auth]
+redirect_urls = [
+  "https://b7b9-2a04-4540-7414-ba00-b627-61e0-5b9f-f0b9.ngrok-free.app/shopify/callback"
+]
+
+[access_scopes]
+scopes = "read_products,read_orders"
+use_legacy_install_flow = false
+
+[webhooks]
+api_version = "2024-07"
+
+[build]
+include_config_on_deploy = true

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	goshopify "github.com/bold-commerce/go-shopify/v4"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/joho/godotenv/autoload"
@@ -29,6 +30,8 @@ type Server struct {
 	config *config.Config
 	// The mail service instance
 	mail mail.Service
+	// The app instance
+	shopifyApp *goshopify.App
 }
 
 func NewServer() *http.Server {
@@ -40,6 +43,9 @@ func NewServer() *http.Server {
 	// If you dont want to change values its safe to remove them here.
 	// Default values are set in config.go
 	config := config.New(&config.Config{
+		App: config.App{
+			ShopifyApp: true,
+		},
 		Server: config.Server{
 			Port: port,
 		},
@@ -81,6 +87,14 @@ func NewServer() *http.Server {
 		}
 	}
 
+	// Create an app somewhere.
+	shopifyApp := goshopify.App{
+		ApiKey:      os.Getenv("SHOPIFY_API_KEY"),
+		ApiSecret:   os.Getenv("SHOPIFY_API_SECRET"),
+		RedirectUrl: os.Getenv("SHOPIFY_APP_URL") + "/shopify/callback",
+		Scope:       "read_products,read_orders",
+	}
+
 	// Create server struct
 	NewServer := &Server{
 		port:        config.Server.Port,
@@ -89,6 +103,7 @@ func NewServer() *http.Server {
 		formDecoder: form.NewDecoder(),
 		config:      config,
 		mail:        mailService,
+		shopifyApp:  &shopifyApp,
 	}
 
 	// Declare Server config

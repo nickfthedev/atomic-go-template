@@ -2469,8 +2469,16 @@ html:has(.drawer-toggle:checked) {
   z-index: 1;
 }
 
+.mb-5 {
+  margin-bottom: 1.25rem;
+}
+
 .mt-3 {
   margin-top: 0.75rem;
+}
+
+.mt-5 {
+  margin-top: 1.25rem;
 }
 
 .inline-block {

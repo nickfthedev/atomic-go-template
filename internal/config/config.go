@@ -29,6 +29,8 @@ type App struct {
 	Name string
 	// App URL. Default "http://localhost:8080"
 	Url string
+	// Shopify App. Default false
+	ShopifyApp bool
 }
 
 type Server struct {
@@ -123,8 +125,9 @@ func New(overrides *Config) *Config {
 			Port: 8080, // Default port
 		},
 		App: App{
-			Name: os.Getenv("APP_NAME"),
-			Url:  os.Getenv("APP_URL"),
+			Name:       os.Getenv("APP_NAME"),
+			Url:        os.Getenv("APP_URL"),
+			ShopifyApp: false,
 		},
 		Database: Database{
 			Enabled: true,

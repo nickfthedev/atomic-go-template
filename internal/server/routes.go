@@ -23,7 +23,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Use(middleware.Logger)
 
 	// Create a new handler instance
-	h := handler.NewHandler(s.db, s.validate, s.formDecoder, s.config, s.mail)
+	h := handler.NewHandler(s.db, s.validate, s.formDecoder, s.config, s.mail, s.shopifyApp)
 	// Create a new middleware instance for own middlewares
 	m := mw.NewMiddleware(s.db, s.validate, s.formDecoder, s.config)
 
@@ -56,6 +56,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Get("/protected", m.IsLoggedIn(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Protected. Access granted"))
 	}))
+
+	//Group for authentificate the shopify app
+	r.Route("/shopify", func(r chi.Router) {
+		r.Get("/auth", h.MyHandler)
+		// Install URL:  http://localhost:8080/shopify/auth?shop=freshstoretest12122
+		r.Get("/callback", h.MyCallbackHandler)
+	})
 
 	// Theme
 	if s.config.Theme.EnableThemeSwitcher {

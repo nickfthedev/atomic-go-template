@@ -8,6 +8,13 @@ services:
     volumes:
       - ./cmd/web/public:/cmd/web/public
       - ./db:/db
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    network_mode: host
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: http 8080
 # DEV ONLY
 #   psql:
 #     image: postgres:latest

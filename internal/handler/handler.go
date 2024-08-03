@@ -6,6 +6,7 @@ import (
 	"my-go-template/internal/mail"
 	"net/http"
 
+	goshopify "github.com/bold-commerce/go-shopify/v4"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
 )
@@ -16,10 +17,11 @@ type Handler struct {
 	formDecoder *form.Decoder
 	config      *config.Config
 	mail        mail.Service
+	shopifyApp  *goshopify.App
 }
 
-func NewHandler(db database.Service, validate *validator.Validate, formDecoder *form.Decoder, config *config.Config, mail mail.Service) *Handler {
-	return &Handler{db: db, validate: validate, formDecoder: formDecoder, config: config, mail: mail}
+func NewHandler(db database.Service, validate *validator.Validate, formDecoder *form.Decoder, config *config.Config, mail mail.Service, shopifyApp *goshopify.App) *Handler {
+	return &Handler{db: db, validate: validate, formDecoder: formDecoder, config: config, mail: mail, shopifyApp: shopifyApp}
 }
 
 // We use this to re-target the errors div and swap the innerHTML, instead of the default behavior of appending to the end of the div.

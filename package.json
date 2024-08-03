@@ -1,6 +1,22 @@
 {
+  "name": "my-go-template-shopify",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "-----> Tunnel <-----": "",
+    "ngrok": "docker compose up -d ngrok",
+    "-----> Shopify <-----": "",
+    "g:install": "npm i -g @shopify/app@latest @shopify/cli@latest",
+    "shopify": "shopify",
+    "update:config": "node cmd/dev/shopify/updateEnv.js && node cmd/dev/shopify/tomlWriter.js && shopify app deploy",
+    "dev": "npm run ngrok && npm run update:config && make watch"
+  },
   "devDependencies": {
+    "@iarna/toml": "^2.2.5",
+    "@shopify/cli-kit": "^3.64.1",
+    "axios": "^1.7.3",
     "daisyui": "^4.12.10",
+    "dotenv": "^16.4.5",
     "tailwindcss": "^3.4.7"
   }
 }
