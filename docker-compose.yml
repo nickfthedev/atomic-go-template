@@ -1,16 +1,24 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  psql:
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT}:5432"
+  app:
+    build: .
+    # ports:
+    #   - "8080:8080"
     volumes:
-      - psql_volume:/var/lib/postgresql/data
+      - ./cmd/web/public:/cmd/web/public
+      - ./db:/db
+# DEV ONLY
+#   psql:
+#     image: postgres:latest
+#     environment:
+#       POSTGRES_DB: ${DB_DATABASE}
+#       POSTGRES_USER: ${DB_USERNAME}
+#       POSTGRES_PASSWORD: ${DB_PASSWORD}
+#     ports:
+#       - "${DB_PORT}:5432"
+#     volumes:
+#       - psql_volume:/var/lib/postgresql/data
 
-volumes:
-  psql_volume:
+# volumes:
+#   psql_volume:

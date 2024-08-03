@@ -2,6 +2,8 @@ package server
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	"my-go-template/cmd/web"
 	"my-go-template/cmd/web/auth"
@@ -31,12 +33,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Checks for the JWT token in the cookie and sets the user data into the context
 	r.Use(m.JWTMiddleware)
 
-	// Serve static files
-	fileServer := http.FileServer(http.FS(embed.Files))
+	// Serve static files without directory listing
+	fileServer := http.FileServer(NoListingFileSystem{http.FS(embed.Files)})
 	r.Handle("/assets/*", fileServer)
 
-	// Public Folder // TODO: Figure out how to preserve this folder in a Dockerfile
-	publicFileServer := http.FileServer(http.Dir("cmd/web/public"))
+	// Public Folder without directory listing
+	publicFileServer := http.FileServer(NoListingFileSystem{http.Dir("cmd/web/public")})
 	r.Handle("/public/*", http.StripPrefix("/public", publicFileServer))
 
 	// API Test Endpoint
@@ -99,4 +101,29 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Post("/profile/edit", m.IsLoggedIn(h.HandleEditProfile))
 	} // End of Auth Feature Routes
 	return r
+}
+
+// NoListingFileSystem wraps http.FileSystem to disable directory listing
+type NoListingFileSystem struct {
+	fs http.FileSystem
+}
+
+func (nfs NoListingFileSystem) Open(path string) (http.File, error) {
+	f, err := nfs.fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if s.IsDir() {
+		index := strings.TrimSuffix(path, "/") + "/index.html"
+		if _, err := nfs.fs.Open(index); err != nil {
+			return nil, os.ErrNotExist
+		}
+	}
+
+	return f, nil
 }
