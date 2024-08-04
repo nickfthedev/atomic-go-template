@@ -12,6 +12,15 @@ templ HelloForm(r *http.Request) {
 			<button type="submit">Submit</button>
 		</form>
 		<div id="hello-container"></div>
+		<button id="open-picker">Open resource picker</button>
+		<script>
+			document
+      .getElementById('open-picker')
+      .addEventListener('click', async () => {
+        const selected = await shopify.resourcePicker({type: 'product'});
+        console.log(selected);
+      });
+  </script>
 	}
 }
 

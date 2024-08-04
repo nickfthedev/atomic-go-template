@@ -12,6 +12,8 @@ import (
 type Config struct {
 	// App Settings
 	App App
+	// Shopify Setting
+	Shopify Shopify
 	// Server Settings
 	Server Server
 	// Database Settings
@@ -31,6 +33,13 @@ type App struct {
 	Url string
 	// Shopify App. Default false
 	ShopifyApp bool
+}
+
+type Shopify struct {
+	// Shopify API Key. Default ""
+	APIKey string
+	// Shopify App Handle. Default ""
+	AppHandle string
 }
 
 type Server struct {
@@ -129,6 +138,10 @@ func New(overrides *Config) *Config {
 			Url:        os.Getenv("APP_URL"),
 			ShopifyApp: false,
 		},
+		Shopify: Shopify{
+			APIKey:    os.Getenv("SHOPIFY_API_KEY"),
+			AppHandle: os.Getenv("APP_HANDLE"),
+		},
 		Database: Database{
 			Enabled: true,
 			Type:    DatabaseTypeSQLite,
@@ -193,6 +206,13 @@ func (c *Config) CheckEnvironmentVariables() error {
 	for _, envVar := range essentialEnvVars {
 		if os.Getenv(envVar) == "" {
 			fmt.Printf("Error: %s environment variable is not set\n", envVar)
+			os.Exit(1)
+		}
+	}
+	if c.App.ShopifyApp {
+		if c.Shopify.APIKey == "" || c.Shopify.AppHandle == "" {
+
+			fmt.Println("Error: SHOPIFY_API_KEY or APP_HANDLE environment variable is not set")
 			os.Exit(1)
 		}
 	}

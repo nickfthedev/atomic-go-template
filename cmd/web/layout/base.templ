@@ -17,6 +17,11 @@ func getTheme(r *http.Request) string {
 	return config.Theme.StandardTheme
 }
 
+func getShopifyAPIKey(r *http.Request) string {
+	config := middleware.GetConfigFromContext(r)
+	return config.Shopify.APIKey
+}
+
 templ Base(r *http.Request) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme={ getTheme(r) }>
@@ -26,6 +31,8 @@ templ Base(r *http.Request) {
 			<link rel="icon" type="image/x-icon" href="/assets/img/favicon.png"/>
 			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script src="/assets/js/htmx.min.js"></script>
+			<meta name="shopify-api-key" content={ getShopifyAPIKey(r) }/>
+			<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 		</head>
 		<body>
 			<div class="flex h-screen flex-col">

@@ -7,15 +7,17 @@ type User struct {
 	BaseModel
 	Username                 string     `gorm:"unique;not null"`
 	Email                    string     `gorm:"unique;not null"`
-	Password                 *string    `gorm:""` // Password is optional
-	PasswordResetToken       *string    `gorm:""` // Password reset token is optional
-	PasswordResetRequestedAt *time.Time `gorm:""` // Password reset requested at is optional
-	VerifiedAt               *time.Time `gorm:""` // Verified at is optional
-	VerifyMailAddress        *string    `gorm:""` // Verify mail address is optional
-	VerifyMailToken          *string    `gorm:""` // Verify mail token is optional
-	AvatarURL                *string    `gorm:""` // Avatar URL is optional
-	OAuthProvider            *string    `gorm:""` // OAuth provider name (e.g., "google", "github")
-	OAuthID                  *string    `gorm:""` // OAuth provider user ID
+	Password                 *string    `gorm:""`       // Password is optional
+	PasswordResetToken       *string    `gorm:""`       // Password reset token is optional
+	PasswordResetRequestedAt *time.Time `gorm:""`       // Password reset requested at is optional
+	VerifiedAt               *time.Time `gorm:""`       // Verified at is optional
+	VerifyMailAddress        *string    `gorm:""`       // Verify mail address is optional
+	VerifyMailToken          *string    `gorm:""`       // Verify mail token is optional
+	AvatarURL                *string    `gorm:""`       // Avatar URL is optional
+	OAuthProvider            *string    `gorm:""`       // OAuth provider name (e.g., "google", "github")
+	OAuthID                  *string    `gorm:""`       // OAuth provider user ID
+	ShopifyAccessToken       *string    `gorm:""`       // Shopify access token
+	ShopifyShop              *string    `gorm:"unique"` // Shopify myshopify domain
 }
 
 type SignUpInput struct {

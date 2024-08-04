@@ -3,7 +3,10 @@ package handler
 import (
 	"context"
 	"fmt"
+	"my-go-template/internal/model"
 	"net/http"
+	"os"
+	"strings"
 
 	goshopify "github.com/bold-commerce/go-shopify/v4"
 )
@@ -53,5 +56,40 @@ func (h *Handler) MyCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	shop, _ := client.Shop.Get(context.Background(), nil)
 	fmt.Printf("%+v \n \n MyShopifyDomain: %s \n", shop, shop.MyshopifyDomain)
 
-	// Do something with the token, like store it in a DB.
+	// TODO: Store the token and shop name in the database, take a look at GoShopifyTest Repo for an example.
+	db := h.db.GetDB()
+
+	// Update or create the user's Shopify information
+	var user model.User
+	result := db.Where("shopify_shop = ?", shopName).FirstOrCreate(&user, model.User{
+		Email:              shop.Email,
+		Username:           shop.Name,
+		ShopifyAccessToken: &token,
+		ShopifyShop:        &shopName,
+	})
+
+	if result.Error != nil {
+		http.Error(w, "Failed to update or create user with Shopify information", http.StatusInternalServerError)
+		return
+	}
+
+	// Update the user if it already existed
+	if result.RowsAffected == 0 {
+		result = db.Model(&user).Updates(model.User{
+			Email:              shop.Email,
+			Username:           shop.Name,
+			ShopifyAccessToken: &token,
+			ShopifyShop:        &shop.MyshopifyDomain,
+		})
+
+		if result.Error != nil {
+			http.Error(w, "Failed to update existing user with Shopify information", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	fmt.Println("OAuth completeted. Redirecting...")
+	// https://admin.shopify.com/store/freshstoretest12122/apps/my-go-template
+	redirectURL := fmt.Sprintf("https://admin.shopify.com/store/%s/apps/%s", strings.Split(shop.MyshopifyDomain, ".")[0], os.Getenv("APP_HANDLE"))
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
