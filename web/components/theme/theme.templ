@@ -1,0 +1,64 @@
+package theme
+
+import (
+	"my-go-template/internal/config"
+	"net/http"
+)
+
+type Handler struct {
+	config *config.Config
+}
+
+func New() *Handler {
+	return &Handler{}
+}
+
+// POST is the handler for the POST request, it renders feedback to the user like errors or success messages
+func (h *Handler) POST(w http.ResponseWriter, r *http.Request) {
+
+	theme := r.FormValue("theme")
+
+	if theme == "system" {
+		http.SetCookie(w, &http.Cookie{
+			Name:  "theme",
+			Path:  "/",
+			Value: "",
+		})
+	}
+	if theme == "light" {
+		http.SetCookie(w, &http.Cookie{
+			Name:  "theme",
+			Path:  "/",
+			Value: "light",
+		})
+	}
+	if theme == "dark" {
+		http.SetCookie(w, &http.Cookie{
+			Name:  "theme",
+			Path:  "/",
+			Value: "dark",
+		})
+	}
+
+	// Redirect to the current page
+	w.Header().Add("HX-Redirect", r.Referer())
+	templ.Handler(ThemeSwitcher()).ServeHTTP(w, r)
+
+}
+
+templ ThemeSwitcher() {
+	<select
+		class="select select-bordered w-full max-w-xs select-sm"
+		hx-trigger="change"
+		hx-post="/theme"
+		hx-target="this"
+		hx-reswap="outerHTML"
+		name="theme"
+	>
+		<option disabled selected>Select Theme</option>
+		<option value="system">System</option>
+		<option value="light">Light</option>
+		<option value="dark">Dark</option>
+	</select>
+	<div id="theme-target" class="hidden"></div>
+}

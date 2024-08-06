@@ -1,6 +1,9 @@
 package layout
 
-import "my-go-template/internal/config"
+import (
+	"my-go-template/internal/config"
+	"my-go-template/web/components/theme"
+)
 
 templ Footer(config *config.Config) {
 	<footer class="footer bg-neutral text-neutral-content items-center p-4">
@@ -22,19 +25,7 @@ templ Footer(config *config.Config) {
 		</aside>
 		<nav class="grid-flow-col gap-4 md:place-self-center md:justify-self-end">
 			if config.Theme.EnableThemeSwitcher {
-				<select
-					class="select select-bordered w-full max-w-xs select-sm"
-					hx-trigger="change"
-					hx-post="/theme"
-					hx-target="#theme-target"
-					name="theme"
-				>
-					<option disabled selected>Select Theme</option>
-					<option value="system">System</option>
-					<option value="light">Light</option>
-					<option value="dark">Dark</option>
-				</select>
-				<div id="theme-target" class="hidden"></div>
+				@theme.ThemeSwitcher()
 			}
 			<a>
 				<svg

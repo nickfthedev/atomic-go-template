@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"my-go-template/internal/handler"
+	"my-go-template/web/components/theme"
 	"my-go-template/web/embed"
 	"my-go-template/web/routes"
 	forget_password "my-go-template/web/routes/auth/forget_password"
@@ -63,7 +64,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Theme
 	if s.config.Theme.EnableThemeSwitcher {
-		r.Post("/theme", h.Theme)
+		r.Post("/theme", theme.New().POST)
 	}
 	// Auth Group goes here
 	if s.config.Auth.EnableAuth {

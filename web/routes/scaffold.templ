@@ -48,10 +48,8 @@ func (h *Handler) POST(w http.ResponseWriter, r *http.Request) {
 
 templ (h *Handler) Scaffold(r *http.Request) {
 	@layout.Base(r) {
-		@common.UseHTMX() {
-			<div class="w-full">
-				Content here
-			</div>
-		}
+		<div class="w-full">
+			Content here
+		</div>
 	}
 }
