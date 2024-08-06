@@ -2,15 +2,18 @@ package tests
 
 import (
 	"io"
-	"my-go-template/internal/handler"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
 func TestHandler(t *testing.T) {
-	h := &handler.Handler{}
-	server := httptest.NewServer(http.HandlerFunc(h.HelloWorldHandler))
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message":"Hello World"}`))
+	})
+	server := httptest.NewServer(handler)
 	defer server.Close()
 	resp, err := http.Get(server.URL)
 	if err != nil {

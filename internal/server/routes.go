@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"my-go-template/internal/handler"
 	"my-go-template/web/components/theme"
 	"my-go-template/web/embed"
 	"my-go-template/web/routes"
@@ -15,6 +14,7 @@ import (
 	reset_password "my-go-template/web/routes/auth/reset_password"
 	"my-go-template/web/routes/auth/signup"
 	verify_mail "my-go-template/web/routes/auth/verify-mail"
+	"my-go-template/web/routes/health"
 	"my-go-template/web/routes/protected"
 	"my-go-template/web/routes/user/profile"
 
@@ -29,8 +29,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Logging Middleware
 	r.Use(middleware.Logger)
 
-	// Create a new handler instance
-	h := handler.NewHandler(s.db, s.validate, s.formDecoder, s.config, s.mail)
 	// Create a new middleware instance for own middlewares
 	m := mw.NewMiddleware(s.db, s.validate, s.formDecoder, s.config)
 
@@ -48,16 +46,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	publicFileServer := http.FileServer(NoListingFileSystem{http.Dir("public")})
 	r.Handle("/public/*", http.StripPrefix("/public", publicFileServer))
 
-	// API Test Endpoint
-	r.Get("/api", h.HelloWorldHandler)
-
 	// Health Check
-	r.Get("/health", h.HealthHandler)
+	r.Get("/health", health.New(s.db, s.config).GET)
 
 	// Home
 	r.Get("/", routes.GET)
-	r.Post("/hello", h.HelloWebHandler) // Test on Homepage
-	// Sample Protected Page
 
 	// This route is only accessible if the user is logged in
 	r.Get("/protected", m.IsLoggedIn(protected.New().GET))
