@@ -1,0 +1,57 @@
+package routes
+
+import (
+	"github.com/go-playground/form/v4"
+	"github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
+	"my-go-template/internal/config"
+	"my-go-template/internal/mail"
+	"my-go-template/web/components/common"
+	"my-go-template/web/layout"
+	"net/http"
+)
+
+// This is a scaffold for a new route
+// You can remove entries from the struct if you don't need them
+// You can also remove the GET and POST methods if you don't need them
+// You could also add new methods to the struct if you need them like PUT or DELETE
+
+type Handler struct {
+	formDecoder *form.Decoder
+	validate    *validator.Validate
+	db          *gorm.DB
+	config      *config.Config
+	mail        mail.Service
+}
+
+func New(db *gorm.DB, config *config.Config, validate *validator.Validate, formDecoder *form.Decoder, mail mail.Service) *Handler {
+	return &Handler{
+		db:          db,
+		config:      config,
+		validate:    validate,
+		formDecoder: formDecoder,
+		mail:        mail,
+	}
+}
+
+// GET is the handler for the GET request, it renders the template
+func (h *Handler) GET(w http.ResponseWriter, r *http.Request) {
+	templ.Handler(h.Scaffold(r)).ServeHTTP(w, r)
+}
+
+// POST is the handler for the POST request, it renders feedback to the user like errors or success messages
+func (h *Handler) POST(w http.ResponseWriter, r *http.Request) {
+	templ.Handler(common.Alert(common.AlertData{
+		Messages: []string{"Scaffold POST"},
+	})).ServeHTTP(w, r)
+}
+
+templ (h *Handler) Scaffold(r *http.Request) {
+	@layout.Base(r) {
+		@common.UseHTMX() {
+			<div class="w-full">
+				Content here
+			</div>
+		}
+	}
+}

@@ -11,6 +11,8 @@ import (
 	"my-go-template/web/routes"
 	"my-go-template/web/routes/auth/login"
 	"my-go-template/web/routes/auth/logout"
+	"my-go-template/web/routes/protected"
+	"my-go-template/web/routes/user/profile"
 
 	mw "my-go-template/internal/middleware"
 
@@ -53,9 +55,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Get("/", routes.GET)
 	r.Post("/hello", h.HelloWebHandler) // Test on Homepage
 	// Sample Protected Page
-	r.Get("/protected", m.IsLoggedIn(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Protected. Access granted"))
-	}))
+
+	// This route is only accessible if the user is logged in
+	r.Get("/protected", m.IsLoggedIn(protected.New().GET))
 
 	// Theme
 	if s.config.Theme.EnableThemeSwitcher {
@@ -93,10 +95,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}) // End of Auth Group
 
 		// Profile Routes
-		r.Get("/profile/edit", m.IsLoggedIn(func(w http.ResponseWriter, r *http.Request) {
-			templ.Handler(auth.EditProfilePage(r)).ServeHTTP(w, r)
-		}))
-		r.Post("/profile/edit", m.IsLoggedIn(h.HandleEditProfile))
+		r.Get("/profile/edit", m.IsLoggedIn(profile.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET))
+		r.Post("/profile/edit", m.IsLoggedIn(profile.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST))
 	} // End of Auth Feature Routes
 	return r
 }

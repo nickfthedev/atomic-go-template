@@ -1,0 +1,30 @@
+package protected
+
+import (
+	"my-go-template/web/layout"
+	"net/http"
+)
+
+type Handler struct {
+}
+
+func New() *Handler {
+	return &Handler{}
+}
+
+// Protected Route, see routes.go for the route definition
+func (h *Handler) GET(w http.ResponseWriter, r *http.Request) {
+	templ.Handler(Protected(r)).ServeHTTP(w, r)
+}
+
+templ Protected(r *http.Request) {
+	@layout.Base(r) {
+		<div class="flex flex-col w-full">
+			<h1 class="text-2xl font-bold">Protected</h1>
+			<span>This is a protected route</span>
+			<span>
+				It is protected by the middleware in routes.go
+			</span>
+		</div>
+	}
+}
