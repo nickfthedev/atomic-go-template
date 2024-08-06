@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"my-go-template/cmd/web/auth"
 	"my-go-template/cmd/web/components"
 	"my-go-template/internal/model"
 	"my-go-template/internal/utils"
@@ -34,7 +33,7 @@ func (h *Handler) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templ.Handler(auth.ResetPasswordForm(r)).ServeHTTP(w, r)
+	//templ.Handler().ServeHTTP(w, r)
 }
 
 func (h *Handler) HandleResetPasswordSubmit(w http.ResponseWriter, r *http.Request) {

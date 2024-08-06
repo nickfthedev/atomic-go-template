@@ -8,9 +8,10 @@ import (
 	"my-go-template/internal/handler"
 	"my-go-template/web/embed"
 	"my-go-template/web/routes"
-	forget_password "my-go-template/web/routes/auth/forget-password"
+	forget_password "my-go-template/web/routes/auth/forget_password"
 	"my-go-template/web/routes/auth/login"
 	"my-go-template/web/routes/auth/logout"
+	reset_password "my-go-template/web/routes/auth/reset_password"
 	"my-go-template/web/routes/auth/signup"
 	verify_mail "my-go-template/web/routes/auth/verify-mail"
 	"my-go-template/web/routes/protected"
@@ -82,7 +83,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 			if s.config.Auth.EnableResetPassword {
 				r.Get("/forget-password", forget_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
 				r.Post("/forget-password", forget_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST)
-				r.Get("/reset-password", h.HandleResetPassword)
+				r.Get("/reset-password", reset_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
 				r.Post("/reset-password", h.HandleResetPasswordSubmit)
 			}
 			// Verify Email Routes
