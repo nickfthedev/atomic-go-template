@@ -98,7 +98,13 @@ func (h *Handler) POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Show Success Message and send redirect to client
+	// We retarget the htmx result and swap the innerHTML instead of outer
+	// This way the login form gets swapped against the success message with the redirect
+	w.Header().Add("HX-Retarget", "this")
+	w.Header().Add("HX-Reswap", "innerHTML")
+	// We trigger a JS in the component to clear the results div
+	w.Header().Add("HX-Trigger", "clearResultDiv")
+
 	templ.Handler(common.Alert(common.AlertData{
 		AlertType:    "success",
 		Message:      "Login successful",
@@ -163,6 +169,12 @@ templ Login(r *http.Request) {
 					</form>
 				</div>
 			</div>
+			<!-- We use this to remove content from result divs -->
+			<script>
+			document.body.addEventListener('clearResultDiv', function() {
+				document.getElementById('result').innerHTML = '';
+				});
+			</script>
 		}
 	}
 }

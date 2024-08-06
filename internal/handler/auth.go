@@ -19,19 +19,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// HandleLogin handles the login form submission, validates the input and redirects to the home page after successful login
-func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
-}
-
-func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	utils.DeleteJWTCookie(w)
-	templ.Handler(components.SuccessResponseFullPage(components.SuccessResponseData{
-		Message:      "Logout successful. You will be redirected to the home page in 2 seconds.",
-		RedirectUrl:  &[]string{"/"}[0],
-		RedirectTime: &[]int{2}[0],
-	})).ServeHTTP(w, r)
-}
-
 func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 	// Parse Multipart Form
 	if err := r.ParseMultipartForm(10 << 20); err != nil {

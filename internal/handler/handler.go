@@ -22,6 +22,7 @@ func NewHandler(db database.Service, validate *validator.Validate, formDecoder *
 	return &Handler{db: db, validate: validate, formDecoder: formDecoder, config: config, mail: mail}
 }
 
+// TODO: Remove after rebuild
 // We use this to re-target the errors div and swap the innerHTML, instead of the default behavior of appending to the end of the div.
 // Useful for scenarios where you switch innerhtml for example at sign up.
 // We dont want people to sign up multiple times so the form shuold disappear on success.
@@ -34,6 +35,7 @@ func addErrorHeaderHandler(handler http.Handler) http.Handler {
 	})
 }
 
+// TODO: Remove after rebuild
 // We use this to trigger the clearErrors event, which clears the errors div.
 // This is useful for scenarios where you want to clear the errors div after a successful action.
 func addSuccessHeaderHandler(handler http.Handler) http.Handler {

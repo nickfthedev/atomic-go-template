@@ -1,0 +1,31 @@
+package logout
+
+import (
+	"my-go-template/internal/utils"
+	"my-go-template/web/components/common"
+	"my-go-template/web/layout"
+	"net/http"
+)
+
+type Handler struct {
+}
+
+func New() *Handler {
+	return &Handler{}
+}
+
+func (h *Handler) GET(w http.ResponseWriter, r *http.Request) {
+	utils.DeleteJWTCookie(w)
+	templ.Handler(Logout(r)).ServeHTTP(w, r)
+}
+
+templ Logout(r *http.Request) {
+	@layout.Base(r) {
+		@common.Alert(common.AlertData{
+			AlertType:    "success",
+			Message:      "Logout successful. You will be redirected to the home page in 2 seconds.",
+			RedirectUrl:  "/",
+			RedirectTime: 2,
+		})
+	}
+}
