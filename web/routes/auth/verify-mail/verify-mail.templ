@@ -1,11 +1,7 @@
 package verify_mail
 
 import (
-	"github.com/go-playground/form/v4"
-	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
-	"my-go-template/internal/config"
-	"my-go-template/internal/mail"
 	"my-go-template/internal/model"
 	"my-go-template/web/components/common"
 	"my-go-template/web/layout"
@@ -19,20 +15,12 @@ import (
 // You could also add new methods to the struct if you need them like PUT or DELETE
 
 type Handler struct {
-	formDecoder *form.Decoder
-	validate    *validator.Validate
-	db          *gorm.DB
-	config      *config.Config
-	mail        mail.Service
+	db *gorm.DB
 }
 
-func New(db *gorm.DB, config *config.Config, validate *validator.Validate, formDecoder *form.Decoder, mail mail.Service) *Handler {
+func New(db *gorm.DB) *Handler {
 	return &Handler{
-		db:          db,
-		config:      config,
-		validate:    validate,
-		formDecoder: formDecoder,
-		mail:        mail,
+		db: db,
 	}
 }
 

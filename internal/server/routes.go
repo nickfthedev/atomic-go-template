@@ -82,7 +82,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 			}
 			// Verify Email Routes
 			if s.config.Auth.EnableVerifyEmail {
-				r.Get("/verify-email", verify_mail.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
+				r.Get("/verify-email", verify_mail.New(s.db.GetDB()).GET)
 			}
 		}) // End of Auth Group
 

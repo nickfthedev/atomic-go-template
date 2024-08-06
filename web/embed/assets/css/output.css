@@ -2639,10 +2639,6 @@ html:has(.drawer-toggle:checked) {
   border-top-right-radius: 1rem;
 }
 
-.border {
-  border-width: 1px;
-}
-
 .bg-base-100 {
   --tw-bg-opacity: 1;
   background-color: var(--fallback-b1,oklch(var(--b1)/var(--tw-bg-opacity)));
