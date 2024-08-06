@@ -21,68 +21,6 @@ import (
 
 // HandleLogin handles the login form submission, validates the input and redirects to the home page after successful login
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	// Declare the input struct
-	var input model.LoginInput
-
-	// Parse and bind the form data to the input struc
-	if err := utils.ParseAndBindForm(r, &input, h.formDecoder); err != nil {
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Error processing form data: " + err.Error()},
-		}))).ServeHTTP(w, r)
-		return
-	}
-
-	// Validate the input
-	if err := h.validate.Struct(input); err != nil {
-		validationErrors := err.(validator.ValidationErrors)
-		var messages []string
-		for _, validationError := range validationErrors {
-			messages = append(messages, utils.MsgForTag(validationError))
-		}
-		// Handle validation errors
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: messages,
-		}))).ServeHTTP(w, r)
-		return
-	}
-
-	// Find user in database
-	user := model.User{}
-	if err := h.db.GetDB().First(&user, "email = ?", input.Email).Error; err != nil {
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Invalid email or password"},
-		}))).ServeHTTP(w, r)
-		return
-	}
-
-	if err := utils.CheckPasswordHash(*user.Password, input.Password); err != nil {
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Invalid email or password"},
-		}))).ServeHTTP(w, r)
-		return
-	}
-
-	if user.VerifiedAt == nil && h.config.Auth.EnableVerifyEmail {
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Please verify your email address before logging in"},
-		}))).ServeHTTP(w, r)
-		return
-	}
-
-	// Set Cookie
-	if err := utils.CreateJWTCookie(w, user.ID.String()); err != nil {
-		addErrorHeaderHandler(templ.Handler(components.ErrorBanner(components.ErrorBannerData{
-			Messages: []string{"Error creating JWT cookie: " + err.Error()},
-		}))).ServeHTTP(w, r)
-		return
-	}
-
-	// Show Success Message and send redirect to client
-	addSuccessHeaderHandler(templ.Handler(components.SuccessResponse(components.SuccessResponseData{
-		Message:      "Login successful",
-		RedirectUrl:  &[]string{"/"}[0],
-		RedirectTime: &[]int{2}[0],
-	}))).ServeHTTP(w, r)
 }
 
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {

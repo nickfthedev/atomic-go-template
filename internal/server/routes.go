@@ -9,6 +9,7 @@ import (
 	"my-go-template/internal/handler"
 	"my-go-template/web/embed"
 	"my-go-template/web/routes"
+	"my-go-template/web/routes/auth/login"
 
 	mw "my-go-template/internal/middleware"
 
@@ -71,10 +72,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 			}
 			// Login Routes
 			if s.config.Auth.EnableLogin {
-				r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-					templ.Handler(auth.LoginForm(r)).ServeHTTP(w, r)
-				})
-				r.Post("/login", h.HandleLogin)
+				r.Get("/login", login.New(s.db.GetDB(), s.config, s.validate, s.formDecoder).GET)
+				r.Post("/login", login.New(s.db.GetDB(), s.config, s.validate, s.formDecoder).POST)
 				r.Get("/logout", h.HandleLogout)
 			}
 			// Reset Password Routes
