@@ -1,0 +1,14 @@
+package common
+
+import (
+	"my-go-template/web/layout"
+	"net/http"
+)
+
+templ AlertWithLayout(r *http.Request, data AlertData) {
+	@layout.Base(r) {
+		<div class="flex w-full justify-center">
+			@Alert(data)
+		</div>
+	}
+}

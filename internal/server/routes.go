@@ -84,7 +84,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 				r.Get("/forget-password", forget_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
 				r.Post("/forget-password", forget_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST)
 				r.Get("/reset-password", reset_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
-				r.Post("/reset-password", h.HandleResetPasswordSubmit)
+				r.Post("/reset-password", reset_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST)
 			}
 			// Verify Email Routes
 			if s.config.Auth.EnableVerifyEmail {
