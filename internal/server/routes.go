@@ -5,18 +5,19 @@ import (
 	"os"
 	"strings"
 
-	"my-go-template/cmd/web/auth"
 	"my-go-template/internal/handler"
 	"my-go-template/web/embed"
 	"my-go-template/web/routes"
+	forget_password "my-go-template/web/routes/auth/forget-password"
 	"my-go-template/web/routes/auth/login"
 	"my-go-template/web/routes/auth/logout"
+	"my-go-template/web/routes/auth/signup"
+	verify_mail "my-go-template/web/routes/auth/verify-mail"
 	"my-go-template/web/routes/protected"
 	"my-go-template/web/routes/user/profile"
 
 	mw "my-go-template/internal/middleware"
 
-	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -68,10 +69,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Route("/auth", func(r chi.Router) {
 			// Signup Routes
 			if s.config.Auth.EnableRegistration {
-				r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
-					templ.Handler(auth.SignupForm(r)).ServeHTTP(w, r)
-				})
-				r.Post("/signup", h.HandleSignup)
+				r.Get("/signup", signup.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
+				r.Post("/signup", signup.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST)
 			}
 			// Login Routes
 			if s.config.Auth.EnableLogin {
@@ -81,22 +80,20 @@ func (s *Server) RegisterRoutes() http.Handler {
 			}
 			// Reset Password Routes
 			if s.config.Auth.EnableResetPassword {
-				r.Get("/forget-password", func(w http.ResponseWriter, r *http.Request) {
-					templ.Handler(auth.ForgetPasswordForm(r)).ServeHTTP(w, r)
-				})
-				r.Post("/forget-password", h.HandleForgetPassword)
+				r.Get("/forget-password", forget_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
+				r.Post("/forget-password", forget_password.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST)
 				r.Get("/reset-password", h.HandleResetPassword)
 				r.Post("/reset-password", h.HandleResetPasswordSubmit)
 			}
 			// Verify Email Routes
 			if s.config.Auth.EnableVerifyEmail {
-				r.Get("/verify-email", h.HandleVerifyEmail)
+				r.Get("/verify-email", verify_mail.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
 			}
 		}) // End of Auth Group
 
 		// Profile Routes
-		r.Get("/profile/edit", m.IsLoggedIn(profile.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET))
-		r.Post("/profile/edit", m.IsLoggedIn(profile.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST))
+		r.Get("/user/profile", m.IsLoggedIn(profile.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET))
+		r.Post("/user/profile", m.IsLoggedIn(profile.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).POST))
 	} // End of Auth Feature Routes
 	return r
 }

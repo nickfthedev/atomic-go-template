@@ -1,0 +1,253 @@
+package signup
+
+import (
+	"fmt"
+	"github.com/go-playground/form/v4"
+	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
+	"gorm.io/gorm"
+	"my-go-template/internal/config"
+	"my-go-template/internal/mail"
+	"my-go-template/internal/model"
+	"my-go-template/internal/user"
+	"my-go-template/internal/utils"
+	"my-go-template/web/components/common"
+	"my-go-template/web/layout"
+	"net/http"
+	"strings"
+)
+
+// This is a scaffold for a new route
+// You can remove entries from the struct if you don't need them
+// You can also remove the GET and POST methods if you don't need them
+// You could also add new methods to the struct if you need them like PUT or DELETE
+
+type Handler struct {
+	formDecoder *form.Decoder
+	validate    *validator.Validate
+	db          *gorm.DB
+	config      *config.Config
+	mail        mail.Service
+}
+
+func New(db *gorm.DB, config *config.Config, validate *validator.Validate, formDecoder *form.Decoder, mail mail.Service) *Handler {
+	return &Handler{
+		db:          db,
+		config:      config,
+		validate:    validate,
+		formDecoder: formDecoder,
+		mail:        mail,
+	}
+}
+
+// GET is the handler for the GET request, it renders the template
+func (h *Handler) GET(w http.ResponseWriter, r *http.Request) {
+	templ.Handler(h.Signup(r)).ServeHTTP(w, r)
+}
+
+// POST is the handler for the POST request, it renders feedback to the user like errors or success messages
+func (h *Handler) POST(w http.ResponseWriter, r *http.Request) {
+
+	// Declare the input struct
+	var input model.SignUpInput
+
+	// Parse and bind the form data to the input struct
+	if err := utils.ParseAndBindForm(r, &input, h.formDecoder); err != nil {
+		templ.Handler(common.Alert(common.AlertData{
+			Message:   "Error processing form data: " + err.Error(),
+			AlertType: "error",
+		})).ServeHTTP(w, r)
+		return
+	}
+
+	// Validate the input
+	if err := h.validate.Struct(input); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		var messages []string
+		for _, validationError := range validationErrors {
+			messages = append(messages, utils.MsgForTag(validationError))
+		}
+		// Handle validation errors
+		templ.Handler(common.Alert(common.AlertData{
+			Messages:  messages,
+			AlertType: "error",
+		})).ServeHTTP(w, r)
+		return
+	}
+
+	// Check if password and confirm password match
+	if input.Password != input.PasswordConfirm {
+		templ.Handler(common.Alert(common.AlertData{
+			Messages:  []string{"Passwords do not match"},
+			AlertType: "error",
+		})).ServeHTTP(w, r)
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(input.Password)
+	if err != nil {
+		templ.Handler(common.Alert(common.AlertData{
+			Messages:  []string{"Error hashing password: " + err.Error()},
+			AlertType: "error",
+		})).ServeHTTP(w, r)
+		return
+	}
+
+	// Save user to database
+	verifyMailToken := uuid.New().String()
+	user := model.User{
+		Username:          input.Username,
+		Email:             input.Email,
+		VerifyMailAddress: &input.Email,
+		VerifyMailToken:   &verifyMailToken,
+		Password:          &hashedPassword,
+	}
+	if err := h.db.Create(&user).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") { // SQLite
+			templ.Handler(common.Alert(common.AlertData{
+				Message:   "A user with this email or username already exists",
+				AlertType: "error",
+			})).ServeHTTP(w, r)
+		} else if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" { // PostgreSQL
+			templ.Handler(common.Alert(common.AlertData{
+				Message:   "A user with this email or username already exists",
+				AlertType: "error",
+			})).ServeHTTP(w, r)
+		} else {
+			templ.Handler(common.Alert(common.AlertData{
+				Message:   "Error creating user: " + err.Error(),
+				AlertType: "error",
+			})).ServeHTTP(w, r)
+		}
+		return
+	}
+	if h.config.Auth.EnableVerifyEmail {
+		// Send verification email
+		err := h.mail.Send(user.Email, h.config.App.Name+" - Verify your email address", "Thank you for signing up. Please click the link below to verify your email address: "+h.config.App.Url+"/auth/verify-email?token="+verifyMailToken)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+	}
+	// Return a success response
+	// We retarget the htmx result and swap the innerHTML instead of outer
+	// This way the login form gets swapped against the success message with the redirect
+	w.Header().Add("HX-Retarget", "this")
+	w.Header().Add("HX-Reswap", "innerHTML")
+	// We trigger a JS in the component to clear the results div
+	w.Header().Add("HX-Trigger", "clearResultDiv")
+	if h.config.Auth.EnableVerifyEmail {
+		templ.Handler(common.Alert(common.AlertData{
+			Message:   "Signup successful. A verification email has been sent to your email address. Please verify your email address to continue.",
+			AlertType: "success",
+			ActionButton: &common.ActionButton{
+				Label: "Login",
+				Url:   "/auth/login",
+			},
+		})).ServeHTTP(w, r)
+	} else {
+		templ.Handler(common.Alert(common.AlertData{
+			Message:   "Signup successful. You can now login.",
+			AlertType: "success",
+			ActionButton: &common.ActionButton{
+				Label: "Login",
+				Url:   "/auth/login",
+			},
+		})).ServeHTTP(w, r)
+	}
+}
+
+templ (h *Handler) Signup(r *http.Request) {
+	// Redirect to home if user is already logged in
+	if user.GetUserFromContext(r).ID != uuid.Nil {
+		<meta http-equiv="refresh" content="0; url=/"/>
+	}
+	@layout.Base(r) {
+		@common.UseHTMX() {
+			<div class="flex justify-center w-full">
+				<div class="flex flex-col w-full p-12 gap-4">
+					<div id="result" hx-swap-oob="true"></div>
+					<h1 class="text-2xl font-bold tracking-tight text-center">Sign Up For An Account</h1>
+					<form
+						hx-post="/auth/signup"
+						class="flex flex-col gap-2 w-full"
+						method="POST"
+						hx-swap="innerHTML"
+						hx-target="#result"
+					>
+						<label class="input input-bordered flex items-center gap-2">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 16 16"
+								fill="currentColor"
+								class="h-4 w-4 opacity-70"
+							>
+								<path
+									d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z"
+								></path>
+								<path
+									d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z"
+								></path>
+							</svg>
+							<input type="text" class="grow" placeholder="Email" name="email"/>
+						</label>
+						<label class="input input-bordered flex items-center gap-2">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 16 16"
+								fill="currentColor"
+								class="h-4 w-4 opacity-70"
+							>
+								<path
+									d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z"
+								></path>
+							</svg>
+							<input type="text" class="grow" placeholder="Username" name="username"/>
+						</label>
+						<label class="input input-bordered flex items-center gap-2">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 16 16"
+								fill="currentColor"
+								class="h-4 w-4 opacity-70"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z"
+									clip-rule="evenodd"
+								></path>
+							</svg>
+							<input type="password" class="grow" placeholder="Password" name="password"/>
+						</label>
+						<label class="input input-bordered flex items-center gap-2">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 16 16"
+								fill="currentColor"
+								class="h-4 w-4 opacity-70"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z"
+									clip-rule="evenodd"
+								></path>
+							</svg>
+							<input type="password" class="grow" placeholder="Confirm Password" name="confirm_password"/>
+						</label>
+						<a href="/auth/login" class="link link-hover link-accent">Already have an account? Login</a>
+						<button type="submit" class="btn btn-active btn-accent btn-block">Sign Up</button>
+					</form>
+				</div>
+			</div>
+			<!-- We use this to remove content from result divs -->
+			<script>
+			document.body.addEventListener('clearResultDiv', function() {
+				document.getElementById('result').innerHTML = '';
+				});
+			</script>
+			>
+		}
+	}
+}

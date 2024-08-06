@@ -218,10 +218,18 @@ func (h *Handler) POST(w http.ResponseWriter, r *http.Request) {
 	// Save user to database
 	err := h.db.Model(&user).Updates(updateFields).Error
 	if err != nil {
-		templ.Handler(common.Alert(common.AlertData{
-			AlertType: "error",
-			Message:   "Error updating user: " + err.Error(),
-		})).ServeHTTP(w, r)
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			templ.Handler(common.Alert(common.AlertData{
+				Message:   "A user with this email or username already exists",
+				AlertType: "error",
+			})).ServeHTTP(w, r)
+		} else {
+			templ.Handler(common.Alert(common.AlertData{
+				AlertType: "error",
+				Message:   "Error updating user: " + err.Error(),
+			})).ServeHTTP(w, r)
+		}
 		return
 	}
 	if user.Email != input.Email && h.config.Auth.EnableVerifyEmail {
@@ -250,7 +258,7 @@ templ (h *Handler) Profile(r *http.Request, user model.User, config *config.Conf
 					<div id="result-container" class=""></div>
 					<h1 class="text-2xl font-bold tracking-tight text-center">Edit Profile</h1>
 					<form
-						hx-post="/profile/edit"
+						hx-post="/user/profile"
 						class="flex flex-col gap-2 w-full"
 						method="POST"
 						hx-target="#result-container"

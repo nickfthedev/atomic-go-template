@@ -1,0 +1,85 @@
+package verify_mail
+
+import (
+	"github.com/go-playground/form/v4"
+	"github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
+	"my-go-template/internal/config"
+	"my-go-template/internal/mail"
+	"my-go-template/internal/model"
+	"my-go-template/web/components/common"
+	"my-go-template/web/layout"
+	"net/http"
+	"time"
+)
+
+// This is a scaffold for a new route
+// You can remove entries from the struct if you don't need them
+// You can also remove the GET and POST methods if you don't need them
+// You could also add new methods to the struct if you need them like PUT or DELETE
+
+type Handler struct {
+	formDecoder *form.Decoder
+	validate    *validator.Validate
+	db          *gorm.DB
+	config      *config.Config
+	mail        mail.Service
+}
+
+func New(db *gorm.DB, config *config.Config, validate *validator.Validate, formDecoder *form.Decoder, mail mail.Service) *Handler {
+	return &Handler{
+		db:          db,
+		config:      config,
+		validate:    validate,
+		formDecoder: formDecoder,
+		mail:        mail,
+	}
+}
+
+// GET is the handler for the GET request, it renders the template
+func (h *Handler) GET(w http.ResponseWriter, r *http.Request) {
+	// Get Token from URL
+	token := r.URL.Query().Get("token")
+
+	// Verify Token
+	user := model.User{}
+	if err := h.db.First(&user, "verify_mail_token = ?", token).Error; err != nil {
+		templ.Handler(h.VerifyMail(r, false)).ServeHTTP(w, r)
+		return
+	}
+
+	// If found set verifiedAt to the current Date
+	if user.VerifiedAt == nil {
+		h.db.Model(&user).Updates(map[string]interface{}{
+			"email":             *user.VerifyMailAddress,
+			"verified_at":       time.Now(),
+			"verify_mail_token": nil,
+		})
+	}
+
+	templ.Handler(h.VerifyMail(r, true)).ServeHTTP(w, r)
+}
+
+templ (h *Handler) VerifyMail(r *http.Request, success bool) {
+	@layout.Base(r) {
+		<div class="w-full">
+			if success {
+				@common.Alert(common.AlertData{
+					Message:      "Email verified successfully. You will be redirected to the login page in 2 seconds.",
+					AlertType:    "success",
+					RedirectUrl:  "/auth/login",
+					RedirectTime: 2,
+				})
+			} else {
+				@common.Alert(common.AlertData{
+					Message:   "Invalid verification token",
+					AlertType: "error",
+					ActionButton: &common.ActionButton{
+						Label: "Back to Home",
+						Url:   "/",
+					},
+				})
+			}
+		</div>
+	}
+}
