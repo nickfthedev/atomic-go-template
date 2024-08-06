@@ -48,7 +48,7 @@ COPY --from=builder /app/main .
 #COPY --from=builder /app/static ./static
 
 # Create directories for persistent storage
-RUN mkdir -p /cmd/web/public /db
+RUN mkdir -p /public /db
 
 # Expose the port the app runs on
 EXPOSE 8080

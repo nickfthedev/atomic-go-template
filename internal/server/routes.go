@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"my-go-template/cmd/web"
 	"my-go-template/cmd/web/auth"
-	"my-go-template/cmd/web/embed"
 	"my-go-template/internal/handler"
+	"my-go-template/web/embed"
+	"my-go-template/web/routes"
 
 	mw "my-go-template/internal/middleware"
 
@@ -38,7 +38,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Handle("/assets/*", fileServer)
 
 	// Public Folder without directory listing
-	publicFileServer := http.FileServer(NoListingFileSystem{http.Dir("cmd/web/public")})
+	publicFileServer := http.FileServer(NoListingFileSystem{http.Dir("public")})
 	r.Handle("/public/*", http.StripPrefix("/public", publicFileServer))
 
 	// API Test Endpoint
@@ -48,9 +48,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Get("/health", h.HealthHandler)
 
 	// Home
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		templ.Handler(web.HelloForm(r)).ServeHTTP(w, r)
-	})
+	r.Get("/", routes.GET)
 	r.Post("/hello", h.HelloWebHandler) // Test on Homepage
 	// Sample Protected Page
 	r.Get("/protected", m.IsLoggedIn(func(w http.ResponseWriter, r *http.Request) {

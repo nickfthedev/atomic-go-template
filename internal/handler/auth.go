@@ -145,7 +145,7 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 		avatar.Seek(0, 0)
 
 		// Ensure the directory exists
-		if err := os.MkdirAll("cmd/web/public/avatars", os.ModePerm); err != nil {
+		if err := os.MkdirAll("public/avatars", os.ModePerm); err != nil {
 			fmt.Println("Error creating directory:", err)
 			templ.Handler(components.ErrorBanner(components.ErrorBannerData{
 				Messages: []string{"Error processing form data: " + err.Error()},
@@ -157,7 +157,7 @@ func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) {
 		avatarPath = uuid.New().String() + "-" + time.Now().Format("060102150405") + "." + strings.Split(avatarFile.Filename, ".")[1]
 
 		// Save Avatar to public folder
-		file, err := os.Create("cmd/web/public/avatars/" + avatarPath)
+		file, err := os.Create("public/avatars/" + avatarPath)
 		if err != nil {
 			fmt.Println("Error creating file:", err)
 			templ.Handler(components.ErrorBanner(components.ErrorBannerData{

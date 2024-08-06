@@ -30,7 +30,7 @@ main
 *templ.go
 
 # Public avatars
-cmd/web/public/avatars
+public/avatars
 
 # DB
 db

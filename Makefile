@@ -6,7 +6,7 @@ all: build
 build:
 	@echo "Building..."
 	@templ generate
-	@npx tailwindcss -i cmd/web/embed/assets/css/input.css -o cmd/web/embed/assets/css/output.css
+	@npx tailwindcss -i web/embed/assets/css/input.css -o web/embed/assets/css/output.css
 	@go build -o main cmd/server/main.go
 
 # Run the application

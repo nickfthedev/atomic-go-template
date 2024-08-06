@@ -6,7 +6,7 @@ services:
     # ports:
     #   - "8080:8080"
     volumes:
-      - ./cmd/web/public:/cmd/web/public
+      - ./public:/public
       - ./db:/db
 # DEV ONLY
 #   psql:

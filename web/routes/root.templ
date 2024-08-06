@@ -1,0 +1,22 @@
+package routes
+
+import (
+	"my-go-template/web/layout"
+	"net/http"
+)
+
+func GET(w http.ResponseWriter, r *http.Request) {
+	templ.Handler(RootWrapper(r)).ServeHTTP(w, r)
+}
+
+// We use this to wrap the Root Template and inject data from our handlers into the template
+templ RootWrapper(r *http.Request) {
+	@Root(r, "Hello World")
+}
+
+// The Template itself
+templ Root(r *http.Request, message string) {
+	@layout.Base(r) {
+		<h1 class="text-3xl font-bold">{ message }</h1>
+	}
+}
