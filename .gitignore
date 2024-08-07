@@ -37,3 +37,6 @@ db
 
 # Node Modules
 node_modules
+
+# EsBuild output
+web/embed/assets/react/*

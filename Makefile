@@ -6,6 +6,7 @@ all: build
 build:
 	@echo "Building..."
 	@templ generate
+	@node cmd/esbuild/esbuild.js
 	@npx tailwindcss -i web/embed/assets/css/input.css -o web/embed/assets/css/output.css
 	@go build -o main cmd/server/main.go
 

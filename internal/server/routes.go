@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	mw "my-go-template/internal/middleware"
 	"my-go-template/web/components/theme"
 	"my-go-template/web/embed"
 	"my-go-template/web/routes"
@@ -16,9 +17,8 @@ import (
 	verify_mail "my-go-template/web/routes/auth/verify-mail"
 	"my-go-template/web/routes/health"
 	"my-go-template/web/routes/protected"
+	react_example "my-go-template/web/routes/react-example"
 	"my-go-template/web/routes/user/profile"
-
-	mw "my-go-template/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -54,6 +54,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// This route is only accessible if the user is logged in
 	r.Get("/protected", m.IsLoggedIn(protected.New().GET))
+
+	r.Get("/react-example", react_example.New(s.db.GetDB(), s.config, s.validate, s.formDecoder, s.mail).GET)
 
 	// Theme
 	if s.config.Theme.EnableThemeSwitcher {
