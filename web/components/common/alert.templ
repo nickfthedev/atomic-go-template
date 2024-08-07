@@ -16,9 +16,14 @@ type AlertData struct {
 	ActionButton *ActionButton
 }
 
+// Don't use this, use Alert instead, this is for tailwind only so the classes are loaded by tailwind
+templ AlertTailwind(data AlertData) {
+	<div class="alert alert-error alert-success alert-warning alert-info"></div>
+}
+
 templ Alert(data AlertData) {
 	<div>
-		<div role="alert" class={ fmt.Sprintf("w-full alert alert-%s", data.AlertType) }>
+		<div role="alert" class={ fmt.Sprintf("alert alert-%s w-full", data.AlertType) }>
 			<div class="flex flex-row gap-2">
 				if data.AlertType == "success" {
 					<svg
