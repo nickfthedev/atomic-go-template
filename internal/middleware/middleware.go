@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"my-go-template/internal/config"
-	"my-go-template/internal/database"
+	"atomic-go-template/internal/config"
+	"atomic-go-template/internal/database"
 
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"

@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	"atomic-go-template/internal/config"
 	"context"
-	"my-go-template/internal/config"
 	"net/http"
 )
 

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"atomic-go-template/internal/server"
 	"fmt"
-	"my-go-template/internal/server"
 )
 
 func main() {

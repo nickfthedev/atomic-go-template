@@ -1,10 +1,10 @@
 package database
 
 import (
+	"atomic-go-template/internal/config"
 	"context"
 	"fmt"
 	"log"
-	"my-go-template/internal/config"
 	"os"
 	"strconv"
 	"time"

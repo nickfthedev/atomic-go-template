@@ -1,4 +1,4 @@
-# Project my-go-template
+# atomic-go-template
 
 ###### What is this? It is a template for a go project.
 

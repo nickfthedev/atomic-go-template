@@ -1,8 +1,8 @@
 package user
 
 import (
-	"my-go-template/internal/middleware"
-	"my-go-template/internal/model"
+	"atomic-go-template/internal/middleware"
+	"atomic-go-template/internal/model"
 	"net/http"
 )
 

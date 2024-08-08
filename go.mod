@@ -1,4 +1,4 @@
-module my-go-template
+module atomic-go-template
 
 go 1.22.5
 

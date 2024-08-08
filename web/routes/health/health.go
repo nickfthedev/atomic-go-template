@@ -1,10 +1,10 @@
 package health
 
 import (
+	"atomic-go-template/internal/config"
+	"atomic-go-template/internal/database"
 	"encoding/json"
 	"fmt"
-	"my-go-template/internal/config"
-	"my-go-template/internal/database"
 	"net/http"
 )
 

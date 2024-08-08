@@ -12,9 +12,9 @@ import (
 	"github.com/go-playground/validator/v10"
 	_ "github.com/joho/godotenv/autoload"
 
-	"my-go-template/internal/config"
-	"my-go-template/internal/database"
-	"my-go-template/internal/mail"
+	"atomic-go-template/internal/config"
+	"atomic-go-template/internal/database"
+	"atomic-go-template/internal/mail"
 )
 
 type Server struct {

@@ -1,8 +1,8 @@
 package mail
 
 import (
+	"atomic-go-template/internal/config"
 	"errors"
-	"my-go-template/internal/config"
 	"os"
 )
 

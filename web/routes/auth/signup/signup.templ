@@ -1,19 +1,19 @@
 package signup
 
 import (
+	"atomic-go-template/internal/config"
+	"atomic-go-template/internal/mail"
+	"atomic-go-template/internal/model"
+	"atomic-go-template/internal/user"
+	"atomic-go-template/internal/utils"
+	"atomic-go-template/web/components/common"
+	"atomic-go-template/web/layout"
 	"fmt"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
-	"my-go-template/internal/config"
-	"my-go-template/internal/mail"
-	"my-go-template/internal/model"
-	"my-go-template/internal/user"
-	"my-go-template/internal/utils"
-	"my-go-template/web/components/common"
-	"my-go-template/web/layout"
 	"net/http"
 	"strings"
 )

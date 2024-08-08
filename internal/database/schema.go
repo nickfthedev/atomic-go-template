@@ -1,7 +1,7 @@
 package database
 
 import (
-	"my-go-template/internal/model"
+	"atomic-go-template/internal/model"
 
 	"gorm.io/gorm"
 )
