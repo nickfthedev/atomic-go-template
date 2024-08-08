@@ -2,7 +2,7 @@
 
 ###### What is this? It is a template for a go project.
 
-It comes with auth, mail and jsx support preconfigured.
+It comes with templ, htmx, auth, mail and jsx support preconfigured.
 
 ###### What is special about it?
 
@@ -24,6 +24,7 @@ You find the compiled files in web/embed/assets/react/
 
 - Go (https://go.dev/)
 - Templ (https://templ.guide/)
+- HTMX (https://htmx.org/)
 - Chi (https://github.com/go-chi/chi)
 - Gorm (https://gorm.io/)
 - Tailwind (https://tailwindcss.com/)
