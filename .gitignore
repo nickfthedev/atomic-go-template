@@ -38,5 +38,8 @@ db
 # Node Modules
 node_modules
 
-# EsBuild output
+# Tailwind
+web/embed/assets/css/output.css
+
+# Esbuild output
 web/embed/assets/react/*
