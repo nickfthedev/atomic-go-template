@@ -14,6 +14,12 @@ This differs from the usual go template, where we have a MVC approach. In my opi
 Heavily inspired by Remix.JS
 Started with https://github.com/Melkeydev/go-blueprint but heavily modified it to fit my idea.
 
+###### About JSX TSX support
+
+Please see the example route for this. I followed the approach of having dynamic react islands.
+Every react.ts or \*.react.ts file is compiled separately and embedded into the binary.
+You find the compiled files in web/embed/assets/react/
+
 ###### Tech stack:
 
 - Go (https://go.dev/)
